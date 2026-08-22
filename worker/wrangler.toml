@@ -1,12 +1,10 @@
-name = "prototype-review-worker"
+name = "roysoft-review-worker"
 main = "src/index.js"
 compatibility_date = "2024-09-23"
 
 [[d1_databases]]
 binding = "DB"
-database_name = "prototype-review-db"
-database_id = "YOUR_D1_DATABASE_ID"  # wrangler d1 create prototype-review-db 로 발급
+database_name = "roysoft-review-db"
+database_id = "a6b76a19-fb14-4070-ad17-5728dbfaca27"
 
 [vars]
-# 로컬 개발용 — 프로덕션은 wrangler secret put JWT_SECRET
-JWT_SECRET = "dev-secret-change-in-production"
