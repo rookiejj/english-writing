@@ -184,11 +184,18 @@ function SpecsView({ specs, defs, query }) {
               {def && <Badge label={`Phase ${def.phase}`} colorMap={PHASE_COLOR} />}
             </div>
             <div className="rounded-xl border border-gray-200 overflow-x-auto">
-              <table className="w-full min-w-[700px] text-xs">
+              <table className="w-full min-w-[700px] text-xs table-fixed">
+                <colgroup>
+                  <col className="w-[20%]" />
+                  <col className="w-[12%]" />
+                  <col className="w-[22%]" />
+                  <col className="w-[24%]" />
+                  <col className="w-[22%]" />
+                </colgroup>
                 <thead>
                   <tr className="bg-gray-50 border-b border-gray-200 text-gray-500">
-                    <th className="text-left px-3 py-2.5 font-medium w-48">스펙 ID</th>
-                    <th className="text-left px-3 py-2.5 font-medium w-24">구분</th>
+                    <th className="text-left px-3 py-2.5 font-medium">스펙 ID</th>
+                    <th className="text-left px-3 py-2.5 font-medium">구분</th>
                     <th className="text-left px-3 py-2.5 font-medium">조건 / 트리거</th>
                     <th className="text-left px-3 py-2.5 font-medium">처리 내용</th>
                     <th className="text-left px-3 py-2.5 font-medium">결과 / 화면 반응</th>
