@@ -6,7 +6,7 @@
   "scripts": {
     "docs:build": "python3 scripts/xlsx-to-json.py",
     "dev": "vite",
-    "build": "python3 scripts/xlsx-to-json.py && vite build",
+    "build": "vite build",
     "preview": "vite preview",
     "worker:dev": "cd worker && wrangler dev",
     "worker:deploy": "cd worker && wrangler deploy",

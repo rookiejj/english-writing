@@ -1,5 +1,7 @@
 import { useEffect, useState, useMemo } from 'react'
 
+const SHEET_ID = import.meta.env.VITE_GOOGLE_SHEET_ID || '1XnnVV9U2Oi_xBzU4eBPpAaOXQPAxQj5C8ECdYE0vgTY'
+
 const PHASE_COLOR = {
   '1':   'bg-blue-100 text-blue-700',
   '1.5': 'bg-indigo-100 text-indigo-700',
@@ -17,6 +19,51 @@ const IA_COLOR = {
   '사용자 IA':     'bg-blue-500',
   '딜러 어드민 IA': 'bg-violet-500',
   '관리 어드민 IA': 'bg-rose-500',
+}
+
+async function fetchSheet(sheetName) {
+  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`
+  const res = await fetch(url)
+  if (!res.ok) throw new Error(res.status)
+  const text = await res.text()
+  const match = text.match(/setResponse\((\{.+\})\)/)
+  if (!match) throw new Error('parse error')
+  const { table } = JSON.parse(match[1])
+  return table.rows.map(row => row.c.map(cell => (cell?.v ?? '')))
+}
+
+function val(v) { return v === null || v === undefined ? '' : String(v) }
+
+function parseDefinitions(rows) {
+  return rows
+    .filter(r => val(r[3]).startsWith('FN-'))
+    .map(r => ({
+      ia:         val(r[0]),
+      d1:         val(r[1]),
+      d2:         val(r[2]),
+      id:         val(r[3]),
+      name:       val(r[4]),
+      target:     val(r[5]),
+      phase:      val(r[6]),
+      definition: val(r[7]),
+      revenue:    val(r[8]),
+    }))
+}
+
+function parseSpecs(rows) {
+  return rows
+    .filter(r => val(r[0]).startsWith('FN-'))
+    .map(r => ({
+      fid:       val(r[0]),
+      specId:    val(r[1]),
+      order:     Number(r[2]) || 0,
+      name:      val(r[3]),
+      type:      val(r[4]),
+      condition: val(r[5]),
+      process:   val(r[6]),
+      result:    val(r[7]),
+      note:      val(r[8]),
+    }))
 }
 
 function Badge({ label, colorMap, fallback = 'bg-gray-100 text-gray-600' }) {
@@ -49,21 +96,18 @@ function DefinitionsView({ data, query }) {
     return map
   }, [filtered])
 
-  if (filtered.length === 0) {
+  if (filtered.length === 0)
     return <p className="text-sm text-gray-400 text-center py-20">검색 결과가 없습니다.</p>
-  }
 
   return (
     <div className="space-y-8">
       {Object.entries(grouped).map(([ia, rows]) => (
         <section key={ia}>
-          {/* Area header */}
           <div className="flex items-center gap-2 mb-3">
             <span className={`w-2 h-5 rounded-sm ${IA_COLOR[ia] ?? 'bg-gray-400'}`} />
             <h2 className="text-sm font-semibold text-gray-700">{ia}</h2>
             <span className="text-xs text-gray-400">{rows.length}개</span>
           </div>
-
           <div className="rounded-xl border border-gray-200 overflow-hidden">
             <table className="w-full text-sm">
               <thead>
@@ -121,9 +165,8 @@ function SpecsView({ specs, defs, query }) {
 
   const defMap = useMemo(() => Object.fromEntries(defs.map(d => [d.id, d])), [defs])
 
-  if (filtered.length === 0) {
+  if (filtered.length === 0)
     return <p className="text-sm text-gray-400 text-center py-20">검색 결과가 없습니다.</p>
-  }
 
   return (
     <div className="space-y-6">
@@ -131,13 +174,11 @@ function SpecsView({ specs, defs, query }) {
         const def = defMap[fid]
         return (
           <section key={fid}>
-            {/* Feature header */}
             <div className="flex items-center gap-3 mb-2">
               <span className="font-mono text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded">{fid}</span>
               <span className="text-sm font-semibold text-gray-800">{rows[0].name}</span>
               {def && <Badge label={`Phase ${def.phase}`} colorMap={PHASE_COLOR} />}
             </div>
-
             <div className="rounded-xl border border-gray-200 overflow-hidden">
               <table className="w-full text-xs">
                 <thead>
@@ -178,14 +219,21 @@ export default function FeatureDocsView({ mode }) {
   const [query, setQuery] = useState('')
 
   useEffect(() => {
-    fetch('/feature-data.json')
-      .then(r => { if (!r.ok) throw new Error(r.status); return r.json() })
-      .then(setData)
+    setData(null)
+    setError(null)
+    Promise.all([
+      fetchSheet('Feature Definitions'),
+      fetchSheet('Feature Specifications'),
+    ])
+      .then(([defRows, specRows]) => setData({
+        definitions: parseDefinitions(defRows),
+        specs: parseSpecs(specRows),
+      }))
       .catch(() => setError(true))
   }, [])
 
-  const title  = mode === 'definition' ? '기능정의서' : '기능명세서'
-  const count  = data
+  const title = mode === 'definition' ? '기능정의서' : '기능명세서'
+  const count = data
     ? mode === 'definition'
       ? `${data.definitions.length}개 기능`
       : `${data.specs.length}개 스펙 항목`
@@ -193,7 +241,6 @@ export default function FeatureDocsView({ mode }) {
 
   return (
     <div className="h-full flex flex-col bg-gray-50">
-      {/* Doc header */}
       <div className="bg-white border-b border-gray-200 px-6 py-4 shrink-0">
         <div className="flex items-center justify-between">
           <div>
@@ -210,12 +257,11 @@ export default function FeatureDocsView({ mode }) {
         </div>
       </div>
 
-      {/* Content */}
       <div className="flex-1 overflow-auto px-6 py-6">
         {error && (
           <div className="text-center py-20">
-            <p className="text-sm text-gray-400">문서를 불러올 수 없습니다.</p>
-            <p className="text-xs text-gray-300 mt-1">npm run docs:build 를 실행해 JSON을 생성해주세요.</p>
+            <p className="text-sm text-gray-400">Google Sheets에서 데이터를 불러올 수 없습니다.</p>
+            <p className="text-xs text-gray-300 mt-1">시트가 공개(뷰어) 상태인지 확인해주세요.</p>
           </div>
         )}
         {!data && !error && (

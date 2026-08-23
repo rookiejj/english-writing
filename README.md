@@ -71,10 +71,10 @@ PM이 발주사와 프로토타입을 공유하고, 화면 단위로 코멘트�
 │   │   └── db/
 │   │       └── schema.sql           # D1 DDL (users · comments)
 │   └── package.json
-├── docs/
+└── docs/
 │   ├── feature-docs.xlsx            # 기능정의서 + 기능명세서 (자동 생성)
 │   └── (IA 원본 파일 등 참고 자료)
-└── .claude/                         # gitignore — 로컬 전용
+└── .claude/
     └── commands/
         ├── generate-feature-definition.md   # /generate-feature-definition 커맨드 정의
         └── generate-feature-spec.md         # /generate-feature-spec 커맨드 정의
@@ -144,8 +144,6 @@ export const PAGE_REGISTRY = [
 
 `docs/feature-docs.xlsx`는 기능정의서(Feature Definitions)와 기능명세서(Feature Specifications) 두 탭으로 구성된다. 두 탭 모두 아래 Claude Code 커맨드로 자동 생성·갱신하며, 수동 작성이나 복붙 없이 IA 문서에서 바로 뽑아낸다.
 
-커맨드 파일은 `.claude/commands/`에 위치하며, `.gitignore`로 제외되어 로컬 전용이다. 새 프로젝트에 적용하려면 해당 디렉터리를 직접 복사한다.
-
 ### `/generate-feature-definition`
 
 IA 문서(URL 또는 로컬 파일)를 읽어 `docs/feature-docs.xlsx`의 **Feature Definitions** 탭을 생성하거나 이어붙인다.
@@ -157,7 +155,7 @@ IA 문서(URL 또는 로컬 파일)를 읽어 `docs/feature-docs.xlsx`의 **Feat
 - Google Docs URL 또는 `docs/` 하위 로컬 파일 모두 지원
 - 하나의 문서에 여러 IA 영역(사용자/딜러/관리 등)이 포함된 경우 한 번에 처리
 - 기존 파일이 있으면 덮어쓰지 않고 이어 추가할지 묻고 확인 후 진행
-- 기능 ID 규칙: `FN-{영역코드}-###` (3자리 zero-pad, 영역코드는 첫 실행 시 확정)
+- 기능 ID 규칙: `FN-USER-###`, `FN-DLR-###`, `FN-ADM-###` (3자리 zero-pad)
 
 **출력 컬럼:** IA 영역 | Depth 1 | Depth 2 | 기능 ID | 기능명 | 대상 | Phase | 기능 정의 | 수익 모델
 
@@ -166,7 +164,7 @@ IA 문서(URL 또는 로컬 파일)를 읽어 `docs/feature-docs.xlsx`의 **Feat
 `docs/feature-docs.xlsx`의 Feature Definitions 탭을 읽어 **Feature Specifications** 탭을 생성하거나 이어붙인다. 기능정의서가 먼저 있어야 실행 가능.
 
 ```
-/generate-feature-spec [기능ID 패턴(선택)] [xlsx 경로 오버라이드(선택)]
+/generate-feature-spec [FN-DLR-* 등 기능ID 패턴(선택)] [xlsx 경로 오버라이드(선택)]
 ```
 
 - 인수 없음 → 아직 스펙이 없는 기능ID만 증분 처리 (기본값)
@@ -249,24 +247,15 @@ worker/wrangler.toml
 | `CLOUDFLARE_API_TOKEN` | Cloudflare API 토큰 (Workers 배포 권한) |
 | `CLOUDFLARE_ACCOUNT_ID` | Cloudflare 계정 ID |
 
-### 문서 데이터 갱신 — GitHub Actions (자동)
+### 문서 데이터 갱신 — Google Sheets (실시간)
 
-`docs/feature-docs.xlsx`가 `main`에 push되면 `.github/workflows/update-feature-data.yml`이 자동으로 `public/feature-data.json`을 재생성하고 커밋한다. 그 커밋이 Cloudflare Pages 재배포를 트리거하므로 **약 2분 후 사이트에 반영**된다.
+기능정의서·기능명세서는 Google Sheets에서 런타임에 직접 가져온다. 빌드나 배포 없이 **시트를 수정하면 새로고침 즉시 반영**된다.
 
-xlsx를 로컬에서 수정하지 않아도 **GitHub 웹 UI에서 파일을 직접 업로드**해도 동일하게 동작한다.
-
-```
-xlsx 변경 (로컬 push 또는 GitHub 웹 업로드)
-  → GitHub Actions: JSON 재생성 + 자동 커밋
-    → Cloudflare Pages: 자동 재배포 (~2분)
-```
+Sheet ID는 `src/components/docs/FeatureDocsView.jsx` 상단 `SHEET_ID` 상수로 관리하며, `VITE_GOOGLE_SHEET_ID` 환경변수로 오버라이드 가능하다. 시트는 반드시 **링크 공유(뷰어) + 웹에 게시** 상태여야 한다.
 
 ### 수동 배포 (필요 시)
 
 ```bash
 # Worker만 로컬에서 직접 배포
 cd worker && npm run deploy
-
-# 문서 JSON만 로컬에서 재생성 (dev 환경용)
-npm run docs:build
 ```
