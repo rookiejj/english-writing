@@ -113,8 +113,10 @@ function DefinitionsView({ data, query }) {
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-200 text-xs text-gray-500">
                   <th className="text-left px-4 py-2.5 font-medium w-32">기능 ID</th>
-                  <th className="text-left px-4 py-2.5 font-medium w-44">기능명</th>
-                  <th className="text-left px-4 py-2.5 font-medium w-20">대상</th>
+                  <th className="text-left px-4 py-2.5 font-medium w-24">Depth 1</th>
+                  <th className="text-left px-4 py-2.5 font-medium w-24">Depth 2</th>
+                  <th className="text-left px-4 py-2.5 font-medium w-40">기능명</th>
+                  <th className="text-left px-4 py-2.5 font-medium w-16">대상</th>
                   <th className="text-left px-4 py-2.5 font-medium w-16">Phase</th>
                   <th className="text-left px-4 py-2.5 font-medium">기능 정의</th>
                 </tr>
@@ -123,6 +125,8 @@ function DefinitionsView({ data, query }) {
                 {rows.map((d, i) => (
                   <tr key={d.id} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}>
                     <td className="px-4 py-3 font-mono text-xs text-gray-500 align-top whitespace-nowrap">{d.id}</td>
+                    <td className="px-4 py-3 text-gray-500 align-top text-xs">{d.d1}</td>
+                    <td className="px-4 py-3 text-gray-500 align-top text-xs">{d.d2}</td>
                     <td className="px-4 py-3 font-medium text-gray-800 align-top">{d.name}</td>
                     <td className="px-4 py-3 text-gray-500 align-top text-xs">{d.target}</td>
                     <td className="px-4 py-3 align-top">
