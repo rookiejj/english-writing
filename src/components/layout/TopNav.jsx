@@ -20,10 +20,10 @@ export default function TopNav({ title = 'Prototype' }) {
 
   return (
     <>
-      <nav className="flex items-center justify-between px-4 h-11 border-b border-gray-200 bg-white shrink-0 z-10">
+      <nav className="grid grid-cols-[1fr_auto_1fr] items-center px-4 h-11 border-b border-gray-200 bg-white shrink-0 z-10">
         <span className="font-semibold text-sm text-gray-800">{title}</span>
 
-        {/* View mode tabs — all breakpoints */}
+        {/* View mode tabs — centered at all breakpoints */}
         <div className="flex items-center gap-0.5 bg-gray-100 rounded-lg p-0.5">
           {VIEW_TABS.map(({ key, label }) => (
             <button
@@ -41,7 +41,7 @@ export default function TopNav({ title = 'Prototype' }) {
         </div>
 
         {/* PC: auth + comment toggle */}
-        <div className="hidden md:flex items-center gap-3">
+        <div className="hidden md:flex items-center gap-3 justify-end">
           {user ? (
             <>
               <span className="text-xs text-gray-500">{user.nickname}</span>
