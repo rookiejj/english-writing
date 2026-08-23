@@ -23,8 +23,8 @@ export default function TopNav({ title = 'Prototype' }) {
       <nav className="flex items-center justify-between px-4 h-11 border-b border-gray-200 bg-white shrink-0 z-10">
         <span className="font-semibold text-sm text-gray-800">{title}</span>
 
-        {/* View mode tabs — PC only */}
-        <div className="hidden md:flex items-center gap-0.5 bg-gray-100 rounded-lg p-0.5">
+        {/* View mode tabs — all breakpoints */}
+        <div className="flex items-center gap-0.5 bg-gray-100 rounded-lg p-0.5">
           {VIEW_TABS.map(({ key, label }) => (
             <button
               key={key}
@@ -39,9 +39,6 @@ export default function TopNav({ title = 'Prototype' }) {
             </button>
           ))}
         </div>
-
-        {/* Mobile: notice only */}
-        <p className="md:hidden text-xs text-gray-400">코멘트는 PC에서만 가능합니다</p>
 
         {/* PC: auth + comment toggle */}
         <div className="hidden md:flex items-center gap-3">
