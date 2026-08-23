@@ -5,3 +5,4 @@ dist/
 .wrangler/
 *.local
 .claude/
+.DS_Store
