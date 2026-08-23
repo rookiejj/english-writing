@@ -108,16 +108,25 @@ function DefinitionsView({ data, query }) {
             <h2 className="text-sm font-semibold text-gray-700">{ia}</h2>
             <span className="text-xs text-gray-400">{rows.length}개</span>
           </div>
-          <div className="rounded-xl border border-gray-200 overflow-hidden">
-            <table className="w-full text-sm">
+          <div className="rounded-xl border border-gray-200 overflow-x-auto">
+            <table className="w-full min-w-[800px] text-sm table-fixed">
+              <colgroup>
+                <col className="w-[12%]" />
+                <col className="w-[10%]" />
+                <col className="w-[10%]" />
+                <col className="w-[15%]" />
+                <col className="w-[7%]" />
+                <col className="w-[6%]" />
+                <col className="w-[40%]" />
+              </colgroup>
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-200 text-xs text-gray-500">
-                  <th className="text-left px-4 py-2.5 font-medium w-32">기능 ID</th>
-                  <th className="text-left px-4 py-2.5 font-medium w-24">Depth 1</th>
-                  <th className="text-left px-4 py-2.5 font-medium w-24">Depth 2</th>
-                  <th className="text-left px-4 py-2.5 font-medium w-40">기능명</th>
-                  <th className="text-left px-4 py-2.5 font-medium w-16">대상</th>
-                  <th className="text-left px-4 py-2.5 font-medium w-16">Phase</th>
+                  <th className="text-left px-4 py-2.5 font-medium">기능 ID</th>
+                  <th className="text-left px-4 py-2.5 font-medium">Depth 1</th>
+                  <th className="text-left px-4 py-2.5 font-medium">Depth 2</th>
+                  <th className="text-left px-4 py-2.5 font-medium">기능명</th>
+                  <th className="text-left px-4 py-2.5 font-medium">대상</th>
+                  <th className="text-left px-4 py-2.5 font-medium">Phase</th>
                   <th className="text-left px-4 py-2.5 font-medium">기능 정의</th>
                 </tr>
               </thead>
