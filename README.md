@@ -249,9 +249,24 @@ worker/wrangler.toml
 | `CLOUDFLARE_API_TOKEN` | Cloudflare API 토큰 (Workers 배포 권한) |
 | `CLOUDFLARE_ACCOUNT_ID` | Cloudflare 계정 ID |
 
+### 문서 데이터 갱신 — GitHub Actions (자동)
+
+`docs/feature-docs.xlsx`가 `main`에 push되면 `.github/workflows/update-feature-data.yml`이 자동으로 `public/feature-data.json`을 재생성하고 커밋한다. 그 커밋이 Cloudflare Pages 재배포를 트리거하므로 **약 2분 후 사이트에 반영**된다.
+
+xlsx를 로컬에서 수정하지 않아도 **GitHub 웹 UI에서 파일을 직접 업로드**해도 동일하게 동작한다.
+
+```
+xlsx 변경 (로컬 push 또는 GitHub 웹 업로드)
+  → GitHub Actions: JSON 재생성 + 자동 커밋
+    → Cloudflare Pages: 자동 재배포 (~2분)
+```
+
 ### 수동 배포 (필요 시)
 
 ```bash
 # Worker만 로컬에서 직접 배포
 cd worker && npm run deploy
+
+# 문서 JSON만 로컬에서 재생성 (dev 환경용)
+npm run docs:build
 ```

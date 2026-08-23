@@ -1,0 +1,233 @@
+import { useEffect, useState, useMemo } from 'react'
+
+const PHASE_COLOR = {
+  '1':   'bg-blue-100 text-blue-700',
+  '1.5': 'bg-indigo-100 text-indigo-700',
+  '2':   'bg-purple-100 text-purple-700',
+}
+
+const TYPE_COLOR = {
+  '메인 플로우': 'bg-emerald-100 text-emerald-700',
+  '유효성 검증': 'bg-amber-100 text-amber-700',
+  '예외 처리':   'bg-red-100 text-red-700',
+  '상태 분기':   'bg-sky-100 text-sky-700',
+}
+
+const IA_COLOR = {
+  '사용자 IA':     'bg-blue-500',
+  '딜러 어드민 IA': 'bg-violet-500',
+  '관리 어드민 IA': 'bg-rose-500',
+}
+
+function Badge({ label, colorMap, fallback = 'bg-gray-100 text-gray-600' }) {
+  const cls = colorMap[label] ?? fallback
+  return (
+    <span className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium ${cls}`}>
+      {label}
+    </span>
+  )
+}
+
+// ── 기능정의서 ────────────────────────────────────────────────────────────────
+function DefinitionsView({ data, query }) {
+  const filtered = useMemo(() => {
+    const q = query.toLowerCase()
+    return data.filter(d =>
+      !q ||
+      d.id.toLowerCase().includes(q) ||
+      d.name.toLowerCase().includes(q) ||
+      d.definition.toLowerCase().includes(q)
+    )
+  }, [data, query])
+
+  const grouped = useMemo(() => {
+    const map = {}
+    for (const d of filtered) {
+      if (!map[d.ia]) map[d.ia] = []
+      map[d.ia].push(d)
+    }
+    return map
+  }, [filtered])
+
+  if (filtered.length === 0) {
+    return <p className="text-sm text-gray-400 text-center py-20">검색 결과가 없습니다.</p>
+  }
+
+  return (
+    <div className="space-y-8">
+      {Object.entries(grouped).map(([ia, rows]) => (
+        <section key={ia}>
+          {/* Area header */}
+          <div className="flex items-center gap-2 mb-3">
+            <span className={`w-2 h-5 rounded-sm ${IA_COLOR[ia] ?? 'bg-gray-400'}`} />
+            <h2 className="text-sm font-semibold text-gray-700">{ia}</h2>
+            <span className="text-xs text-gray-400">{rows.length}개</span>
+          </div>
+
+          <div className="rounded-xl border border-gray-200 overflow-hidden">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-gray-50 border-b border-gray-200 text-xs text-gray-500">
+                  <th className="text-left px-4 py-2.5 font-medium w-32">기능 ID</th>
+                  <th className="text-left px-4 py-2.5 font-medium w-44">기능명</th>
+                  <th className="text-left px-4 py-2.5 font-medium w-20">대상</th>
+                  <th className="text-left px-4 py-2.5 font-medium w-16">Phase</th>
+                  <th className="text-left px-4 py-2.5 font-medium">기능 정의</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {rows.map((d, i) => (
+                  <tr key={d.id} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}>
+                    <td className="px-4 py-3 font-mono text-xs text-gray-500 align-top whitespace-nowrap">{d.id}</td>
+                    <td className="px-4 py-3 font-medium text-gray-800 align-top">{d.name}</td>
+                    <td className="px-4 py-3 text-gray-500 align-top text-xs">{d.target}</td>
+                    <td className="px-4 py-3 align-top">
+                      <Badge label={d.phase} colorMap={PHASE_COLOR} />
+                    </td>
+                    <td className="px-4 py-3 text-gray-600 align-top text-xs leading-relaxed whitespace-pre-line">{d.definition}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      ))}
+    </div>
+  )
+}
+
+// ── 기능명세서 ────────────────────────────────────────────────────────────────
+function SpecsView({ specs, defs, query }) {
+  const filtered = useMemo(() => {
+    const q = query.toLowerCase()
+    return specs.filter(s =>
+      !q ||
+      s.fid.toLowerCase().includes(q) ||
+      s.name.toLowerCase().includes(q) ||
+      s.condition.toLowerCase().includes(q) ||
+      s.process.toLowerCase().includes(q) ||
+      s.type.toLowerCase().includes(q)
+    )
+  }, [specs, query])
+
+  const grouped = useMemo(() => {
+    const map = {}
+    for (const s of filtered) {
+      if (!map[s.fid]) map[s.fid] = []
+      map[s.fid].push(s)
+    }
+    return map
+  }, [filtered])
+
+  const defMap = useMemo(() => Object.fromEntries(defs.map(d => [d.id, d])), [defs])
+
+  if (filtered.length === 0) {
+    return <p className="text-sm text-gray-400 text-center py-20">검색 결과가 없습니다.</p>
+  }
+
+  return (
+    <div className="space-y-6">
+      {Object.entries(grouped).map(([fid, rows]) => {
+        const def = defMap[fid]
+        return (
+          <section key={fid}>
+            {/* Feature header */}
+            <div className="flex items-center gap-3 mb-2">
+              <span className="font-mono text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded">{fid}</span>
+              <span className="text-sm font-semibold text-gray-800">{rows[0].name}</span>
+              {def && <Badge label={`Phase ${def.phase}`} colorMap={PHASE_COLOR} />}
+            </div>
+
+            <div className="rounded-xl border border-gray-200 overflow-hidden">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="bg-gray-50 border-b border-gray-200 text-gray-500">
+                    <th className="text-left px-3 py-2.5 font-medium w-48">스펙 ID</th>
+                    <th className="text-left px-3 py-2.5 font-medium w-24">구분</th>
+                    <th className="text-left px-3 py-2.5 font-medium">조건 / 트리거</th>
+                    <th className="text-left px-3 py-2.5 font-medium">처리 내용</th>
+                    <th className="text-left px-3 py-2.5 font-medium">결과 / 화면 반응</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {rows.sort((a, b) => a.order - b.order).map((s, i) => (
+                    <tr key={s.specId} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}>
+                      <td className="px-3 py-3 font-mono text-gray-400 align-top whitespace-nowrap">{s.specId}</td>
+                      <td className="px-3 py-3 align-top">
+                        <Badge label={s.type} colorMap={TYPE_COLOR} />
+                      </td>
+                      <td className="px-3 py-3 text-gray-600 align-top leading-relaxed">{s.condition}</td>
+                      <td className="px-3 py-3 text-gray-600 align-top leading-relaxed">{s.process}</td>
+                      <td className="px-3 py-3 text-gray-600 align-top leading-relaxed">{s.result}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        )
+      })}
+    </div>
+  )
+}
+
+// ── Main ──────────────────────────────────────────────────────────────────────
+export default function FeatureDocsView({ mode }) {
+  const [data, setData] = useState(null)
+  const [error, setError] = useState(null)
+  const [query, setQuery] = useState('')
+
+  useEffect(() => {
+    fetch('/feature-data.json')
+      .then(r => { if (!r.ok) throw new Error(r.status); return r.json() })
+      .then(setData)
+      .catch(() => setError(true))
+  }, [])
+
+  const title  = mode === 'definition' ? '기능정의서' : '기능명세서'
+  const count  = data
+    ? mode === 'definition'
+      ? `${data.definitions.length}개 기능`
+      : `${data.specs.length}개 스펙 항목`
+    : ''
+
+  return (
+    <div className="h-full flex flex-col bg-gray-50">
+      {/* Doc header */}
+      <div className="bg-white border-b border-gray-200 px-6 py-4 shrink-0">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-base font-semibold text-gray-900">{title}</h1>
+            {count && <p className="text-xs text-gray-400 mt-0.5">{count}</p>}
+          </div>
+          <input
+            type="text"
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            placeholder="기능 ID, 기능명 검색..."
+            className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 w-56 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 bg-gray-50"
+          />
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 overflow-auto px-6 py-6">
+        {error && (
+          <div className="text-center py-20">
+            <p className="text-sm text-gray-400">문서를 불러올 수 없습니다.</p>
+            <p className="text-xs text-gray-300 mt-1">npm run docs:build 를 실행해 JSON을 생성해주세요.</p>
+          </div>
+        )}
+        {!data && !error && (
+          <div className="text-center py-20 text-sm text-gray-400">로딩 중...</div>
+        )}
+        {data && mode === 'definition' && (
+          <DefinitionsView data={data.definitions} query={query} />
+        )}
+        {data && mode === 'spec' && (
+          <SpecsView specs={data.specs} defs={data.definitions} query={query} />
+        )}
+      </div>
+    </div>
+  )
+}
