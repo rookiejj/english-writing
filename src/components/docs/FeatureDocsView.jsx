@@ -251,6 +251,7 @@ export default function FeatureDocsView({ mode }) {
   const [error, setError] = useState(null)
   const [query, setQuery] = useState('')
   const scrollRef = useRef(null)
+  const savedPos = useRef({ definition: 0, spec: 0 })
 
   useEffect(() => {
     setData(null)
@@ -272,6 +273,10 @@ export default function FeatureDocsView({ mode }) {
       ? `${data.definitions.length}개 기능`
       : `${data.specs.length}개 스펙 항목`
     : ''
+
+  useEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollTop = savedPos.current[mode] ?? 0
+  }, [mode])
 
   const iaList = useMemo(() => {
     if (!data) return []
@@ -324,7 +329,11 @@ export default function FeatureDocsView({ mode }) {
         </div>
       </div>
 
-      <div key={mode} ref={scrollRef} className="flex-1 overflow-auto px-6 py-6">
+      <div
+        ref={scrollRef}
+        className="flex-1 overflow-auto px-6 py-6"
+        onScroll={() => { savedPos.current[mode] = scrollRef.current?.scrollTop ?? 0 }}
+      >
         {error && (
           <div className="text-center py-20">
             <p className="text-sm text-gray-400">Google Sheets에서 데이터를 불러올 수 없습니다.</p>
