@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useRef } from 'react'
 
 const SHEET_ID = import.meta.env.VITE_GOOGLE_SHEET_ID || '1XnnVV9U2Oi_xBzU4eBPpAaOXQPAxQj5C8ECdYE0vgTY'
 
@@ -250,6 +250,7 @@ export default function FeatureDocsView({ mode }) {
   const [data, setData] = useState(null)
   const [error, setError] = useState(null)
   const [query, setQuery] = useState('')
+  const scrollRef = useRef(null)
 
   useEffect(() => {
     setData(null)
@@ -282,7 +283,11 @@ export default function FeatureDocsView({ mode }) {
 
   const scrollToIA = (ia) => {
     const prefix = mode === 'definition' ? 'def-ia-' : 'spec-ia-'
-    document.getElementById(`${prefix}${ia}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    const el = document.getElementById(`${prefix}${ia}`)
+    const container = scrollRef.current
+    if (!el || !container) return
+    const offset = el.getBoundingClientRect().top - container.getBoundingClientRect().top - 24
+    container.scrollBy({ top: offset, behavior: 'smooth' })
   }
 
   return (
@@ -319,7 +324,7 @@ export default function FeatureDocsView({ mode }) {
         </div>
       </div>
 
-      <div className="flex-1 overflow-auto px-6 py-6">
+      <div key={mode} ref={scrollRef} className="flex-1 overflow-auto px-6 py-6">
         {error && (
           <div className="text-center py-20">
             <p className="text-sm text-gray-400">Google Sheets에서 데이터를 불러올 수 없습니다.</p>
