@@ -42,11 +42,17 @@ From `$ARGUMENTS`, classify each token:
 
 For each 기능ID in scope, write **at least one row** (메인 플로우), plus as many additional rows as are genuinely implied by that feature's 기능정의 text and ordinary domain reasoning — don't force a fixed count, don't invent exotic edge cases that aren't plausible for that specific feature.
 
+**Read the full 기능정의서 row, not just the 기능정의 text column.** In particular, the **수익 모델** column is a direct signal for 상태 분기 rows — if it names a fee, quota, or paid tier (e.g. "1건 무료, 초과분 결제", "$X/건", "월정액"), that's almost always a real branch point (free vs. paid path, quota-exceeded state, payment step) that belongs as its own 상태 분기 row. Missing this is the single most common way this command under-delivers — check it for every feature, not just the ones that look obviously transactional.
+
+**`처리 내용` must describe actual processing steps, not restate the definition.** Don't write a sentence that just re-packages 기능명 + 기능정의's Input/Output (e.g. "X가 Y 기능에 접근 → [기능정의 그대로] → Z 반환" is exactly the pattern to avoid). Instead write what genuinely happens at that step — validation order, what gets checked against what, what state changes, what gets called — even at a lightweight/non-technical level. If you notice yourself echoing the 기능정의 column's wording back with only cosmetic changes, rewrite it; that's a sign this row isn't adding information beyond what 기능정의서 already has, which defeats the point of a separate spec doc.
+
+**Don't default to generic technical failures as 예외 처리 filler.** Rows like "서버 오류/API 실패 → 오류 메시지 표시" or "세션 만료 → 로그인 페이지로 리다이렉트" are true of almost every feature in the same generic way — they're infrastructure-level concerns an engineer already assumes, not a business decision a PM needs to spec out. Only include a technical-failure row when this *specific* feature has a non-obvious consequence worth calling out (e.g. a payment step failing mid-flow has state-recovery implications; a plain read-only list screen failing to load usually doesn't need its own row). Spend that row budget instead on business-logic branches genuinely specific to the feature — quota limits, approval states, pricing tiers, phase gating, role-based differences — the kind of thing only someone who read the 기능정의 (수익 모델 included) would know to write.
+
 **Case types (구분):**
 - `메인 플로우` — the normal successful path (required, ≥1 row per feature)
 - `유효성 검증` — input/format validation failures
-- `예외 처리` — error states, failures, edge conditions outside normal validation (only where plausible)
-- `상태 분기` — the flow forks based on some state (user tier, phase gating, existing data, etc.)
+- `예외 처리` — error states, failures, edge conditions outside normal validation (only where plausible, and only when feature-specific — see above)
+- `상태 분기` — the flow forks based on some state (user tier, phase gating, quota/payment triggers from 수익 모델, existing data, etc.)
 
 **Columns per row:**
 | 컬럼 | 내용 |

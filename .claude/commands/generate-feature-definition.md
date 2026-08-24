@@ -57,6 +57,8 @@ For each Depth 2 item, write (don't just copy the IA doc's wording — rephrase 
 - **기능명**: short noun phrase
 - **기능 정의**: 1–2 sentences in `목적 / Input / Output` format
 
+**Don't truncate enumerated lists from the IA source.** If the IA's 세부항목설명 names specific examples (brand lists, option lists, status values, etc.), carry all of them into the Input/Output text — don't quietly drop items to shorten the sentence, even if the source itself ends the list with "등" (implying more exist beyond it). E.g. if the source lists 8 brands, the 기능정의 should list all 8, not a shortened 6-item version. Rephrasing the sentence structure is fine and expected; dropping enumerated content is not.
+
 This command produces the **feature definition doc only**. Detailed behavior / exception handling (기능명세서) is out of scope here — that belongs to `/generate-feature-spec`.
 
 ## 5. Create or update the local xlsx
