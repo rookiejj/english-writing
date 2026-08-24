@@ -167,67 +167,80 @@ function SpecsView({ specs, defs, query }) {
     )
   }, [specs, query])
 
-  const grouped = useMemo(() => {
-    const map = {}
-    for (const s of filtered) {
-      if (!map[s.fid]) map[s.fid] = []
-      map[s.fid].push(s)
-    }
-    return map
-  }, [filtered])
-
   const defMap = useMemo(() => Object.fromEntries(defs.map(d => [d.id, d])), [defs])
+
+  const groupedByIA = useMemo(() => {
+    const iaMap = {}
+    for (const s of filtered) {
+      const ia = defMap[s.fid]?.ia ?? '기타'
+      if (!iaMap[ia]) iaMap[ia] = {}
+      if (!iaMap[ia][s.fid]) iaMap[ia][s.fid] = []
+      iaMap[ia][s.fid].push(s)
+    }
+    return iaMap
+  }, [filtered, defMap])
 
   if (filtered.length === 0)
     return <p className="text-sm text-gray-400 text-center py-20">검색 결과가 없습니다.</p>
 
   return (
-    <div className="space-y-6">
-      {Object.entries(grouped).map(([fid, rows]) => {
-        const def = defMap[fid]
-        return (
-          <section key={fid}>
-            <div className="flex items-center gap-3 mb-2">
-              <span className="font-mono text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded">{fid}</span>
-              <span className="text-sm font-semibold text-gray-800">{rows[0].name}</span>
-              {def && <Badge label={`Phase ${def.phase}`} colorMap={PHASE_COLOR} />}
-            </div>
-            <div className="rounded-xl border border-gray-200 overflow-x-auto">
-              <table className="w-full min-w-[700px] text-xs table-fixed">
-                <colgroup>
-                  <col className="w-[20%]" />
-                  <col className="w-[12%]" />
-                  <col className="w-[22%]" />
-                  <col className="w-[24%]" />
-                  <col className="w-[22%]" />
-                </colgroup>
-                <thead>
-                  <tr className="bg-gray-50 border-b border-gray-200 text-gray-500">
-                    <th className="text-left px-3 py-2.5 font-medium">스펙 ID</th>
-                    <th className="text-left px-3 py-2.5 font-medium">구분</th>
-                    <th className="text-left px-3 py-2.5 font-medium">조건 / 트리거</th>
-                    <th className="text-left px-3 py-2.5 font-medium">처리 내용</th>
-                    <th className="text-left px-3 py-2.5 font-medium">결과 / 화면 반응</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {rows.sort((a, b) => a.order - b.order).map((s, i) => (
-                    <tr key={s.specId} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}>
-                      <td className="px-3 py-3 font-mono text-gray-400 align-top whitespace-nowrap">{s.specId}</td>
-                      <td className="px-3 py-3 align-top">
-                        <Badge label={s.type} colorMap={TYPE_COLOR} />
-                      </td>
-                      <td className="px-3 py-3 text-gray-600 align-top leading-relaxed">{s.condition}</td>
-                      <td className="px-3 py-3 text-gray-600 align-top leading-relaxed">{s.process}</td>
-                      <td className="px-3 py-3 text-gray-600 align-top leading-relaxed">{s.result}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
-        )
-      })}
+    <div className="space-y-10">
+      {Object.entries(groupedByIA).map(([ia, fidMap]) => (
+        <div key={ia}>
+          <div className="flex items-center gap-2 mb-4">
+            <span className={`w-2 h-5 rounded-sm ${IA_COLOR[ia] ?? 'bg-gray-400'}`} />
+            <h2 className="text-sm font-semibold text-gray-700">{ia}</h2>
+            <span className="text-xs text-gray-400">{Object.keys(fidMap).length}개 기능</span>
+          </div>
+          <div className="space-y-6">
+            {Object.entries(fidMap).map(([fid, rows]) => {
+              const def = defMap[fid]
+              return (
+                <section key={fid}>
+                  <div className="flex items-center gap-3 mb-2">
+                    <span className="font-mono text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded">{fid}</span>
+                    <span className="text-sm font-semibold text-gray-800">{rows[0].name}</span>
+                    {def && <Badge label={`Phase ${def.phase}`} colorMap={PHASE_COLOR} />}
+                  </div>
+                  <div className="rounded-xl border border-gray-200 overflow-x-auto">
+                    <table className="w-full min-w-[700px] text-xs table-fixed">
+                      <colgroup>
+                        <col className="w-[20%]" />
+                        <col className="w-[12%]" />
+                        <col className="w-[22%]" />
+                        <col className="w-[24%]" />
+                        <col className="w-[22%]" />
+                      </colgroup>
+                      <thead>
+                        <tr className="bg-gray-50 border-b border-gray-200 text-gray-500">
+                          <th className="text-left px-3 py-2.5 font-medium">스펙 ID</th>
+                          <th className="text-left px-3 py-2.5 font-medium">구분</th>
+                          <th className="text-left px-3 py-2.5 font-medium">조건 / 트리거</th>
+                          <th className="text-left px-3 py-2.5 font-medium">처리 내용</th>
+                          <th className="text-left px-3 py-2.5 font-medium">결과 / 화면 반응</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100">
+                        {rows.sort((a, b) => a.order - b.order).map((s, i) => (
+                          <tr key={s.specId} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}>
+                            <td className="px-3 py-3 font-mono text-gray-400 align-top whitespace-nowrap">{s.specId}</td>
+                            <td className="px-3 py-3 align-top">
+                              <Badge label={s.type} colorMap={TYPE_COLOR} />
+                            </td>
+                            <td className="px-3 py-3 text-gray-600 align-top leading-relaxed">{s.condition}</td>
+                            <td className="px-3 py-3 text-gray-600 align-top leading-relaxed">{s.process}</td>
+                            <td className="px-3 py-3 text-gray-600 align-top leading-relaxed">{s.result}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </section>
+              )
+            })}
+          </div>
+        </div>
+      ))}
     </div>
   )
 }
