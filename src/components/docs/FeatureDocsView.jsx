@@ -102,7 +102,7 @@ function DefinitionsView({ data, query }) {
   return (
     <div className="space-y-8">
       {Object.entries(grouped).map(([ia, rows]) => (
-        <section key={ia}>
+        <section key={ia} id={`def-ia-${ia}`}>
           <div className="flex items-center gap-2 mb-3">
             <span className={`w-2 h-5 rounded-sm ${IA_COLOR[ia] ?? 'bg-gray-400'}`} />
             <h2 className="text-sm font-semibold text-gray-700">{ia}</h2>
@@ -186,7 +186,7 @@ function SpecsView({ specs, defs, query }) {
   return (
     <div className="space-y-10">
       {Object.entries(groupedByIA).map(([ia, fidMap]) => (
-        <div key={ia}>
+        <div key={ia} id={`spec-ia-${ia}`}>
           <div className="flex items-center gap-2 mb-4">
             <span className={`w-2 h-5 rounded-sm ${IA_COLOR[ia] ?? 'bg-gray-400'}`} />
             <h2 className="text-sm font-semibold text-gray-700">{ia}</h2>
@@ -272,20 +272,49 @@ export default function FeatureDocsView({ mode }) {
       : `${data.specs.length}개 스펙 항목`
     : ''
 
+  const iaList = useMemo(() => {
+    if (!data) return []
+    const seen = new Set()
+    return data.definitions
+      .map(d => d.ia)
+      .filter(ia => { if (seen.has(ia)) return false; seen.add(ia); return true })
+  }, [data])
+
+  const scrollToIA = (ia) => {
+    const prefix = mode === 'definition' ? 'def-ia-' : 'spec-ia-'
+    document.getElementById(`${prefix}${ia}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
   return (
     <div className="h-full flex flex-col bg-gray-50">
       <div className="bg-white border-b border-gray-200 px-6 py-4 shrink-0">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-base font-semibold text-gray-900">{title}</h1>
-            {count && <p className="text-xs text-gray-400 mt-0.5">{count}</p>}
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="shrink-0">
+              <h1 className="text-base font-semibold text-gray-900">{title}</h1>
+              {count && <p className="text-xs text-gray-400 mt-0.5">{count}</p>}
+            </div>
+            {iaList.length > 0 && (
+              <div className="flex items-center gap-1 flex-wrap">
+                {iaList.map(ia => (
+                  <button
+                    key={ia}
+                    onClick={() => scrollToIA(ia)}
+                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors whitespace-nowrap"
+                  >
+                    <span className={`w-1.5 h-1.5 rounded-full ${IA_COLOR[ia] ?? 'bg-gray-400'}`} />
+                    {ia.replace(' IA', '')}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
           <input
             type="text"
             value={query}
             onChange={e => setQuery(e.target.value)}
             placeholder="기능 ID, 기능명 검색..."
-            className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 w-56 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 bg-gray-50"
+            className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 w-56 shrink-0 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 bg-gray-50"
           />
         </div>
       </div>
