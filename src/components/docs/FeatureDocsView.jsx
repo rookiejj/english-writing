@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo, useRef } from 'react'
 
-const SHEET_ID = import.meta.env.VITE_GOOGLE_SHEET_ID || '1XnnVV9U2Oi_xBzU4eBPpAaOXQPAxQj5C8ECdYE0vgTY'
+const SHEET_ID = import.meta.env.VITE_GOOGLE_SHEET_ID
 
 const PHASE_COLOR = {
   '1':   'bg-blue-100 text-blue-700',
