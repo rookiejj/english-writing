@@ -33,9 +33,11 @@ PM이 발주사와 프로토타입을 공유하고, 화면 단위로 코멘트�
 │   │   └── [PageName]/index.jsx     # 화면별 컴포넌트
 │   ├── components/
 │   │   ├── layout/
-│   │   │   ├── AppLayout.jsx        # PC: 2/3 프로토 + 1/3 코멘트 패널
-│   │   │   ├── TopNav.jsx           # 상단 네비 (PC: 인증 버튼 / Mobile: 안내 문구)
+│   │   │   ├── AppLayout.jsx        # 뷰 모드에 따라 프로토타입 or 문서 뷰 렌더
+│   │   │   ├── TopNav.jsx           # 뷰 전환 탭 (프로토타입·정의서·명세서) + 인증 버튼
 │   │   │   └── CommentPanel.jsx     # 전체 코멘트(상) + 현재 화면 코멘트(하)
+│   │   ├── docs/
+│   │   │   └── FeatureDocsView.jsx  # 기능정의서·명세서 뷰 (Google Sheets 실시간 fetch)
 │   │   ├── comment/
 │   │   │   ├── CommentList.jsx      # 코멘트 목록 렌더
 │   │   │   ├── CommentItem.jsx      # 코멘트 단위 (답글 포함, 인스타그램 스타일)
@@ -55,7 +57,7 @@ PM이 발주사와 프로토타입을 공유하고, 화면 단위로 코멘트�
 │   └── stores/
 │       ├── authStore.js             # 유저·토큰 (localStorage 영속)
 │       ├── commentStore.js          # 전체·현재 화면 코멘트 상태
-│       └── uiStore.js               # 패널 열림·모달 열림 상태
+│       └── uiStore.js               # 패널 열림·모달·뷰 모드 상태 (viewMode)
 ├── worker/
 │   ├── wrangler.toml                # Workers 설정 (D1 바인딩)
 │   ├── src/
@@ -84,22 +86,37 @@ PM이 발주사와 프로토타입을 공유하고, 화면 단위로 코멘트�
 
 ## Layout
 
-### PC (md 이상)
+### TopNav
+
 ```
-┌─────────────────────────────────────┬────────────────┐
-│              TopNav                              │
+[ 타이틀 ]   [ 프로토타입 | 기능정의서 | 기능명세서 ]   [ 로그인 / 프로필 / 코멘트 토글 (PC) ]
+```
+
+- 뷰 전환 탭은 모든 브레이크포인트에서 표시
+- 인증 버튼·코멘트 토글은 PC(`md` 이상)에서만 표시
+- 코멘트 토글은 프로토타입 뷰일 때만 표시
+
+### PC (md 이상) — 프로토타입 뷰
+
+```
+┌──────────────────────────────────────┬────────────────┐
+│               TopNav                              │
 ├──────────────────────────────────────┼────────────────┤
 │                                      │ 전체 코멘트 ↑  │
 │        프로토타입 화면 (2/3)          ├────────────────┤
 │                                      │ 현재 화면 ↓    │
 └──────────────────────────────────────┴────────────────┘
 ```
-- 코멘트 패널은 우측으로 슬라이드 토글 (transition-all)
-- TopNav 우측: 로그인 / 닉네임·비밀번호 변경 / 로그아웃 / 패널 토글 버튼
 
-### Mobile
+- 코멘트 패널은 우측으로 슬라이드 토글 (transition-all)
+
+### 문서 뷰 (기능정의서·명세서)
+
+코멘트 패널 없이 전체 너비로 `FeatureDocsView` 렌더. PC·모바일 공통.
+
+### Mobile — 프로토타입 뷰
+
 - 프로토타입 영역만 표시
-- TopNav: 서비스 타이틀 + "코멘트는 PC에서만 가능합니다" 안내 문구
 - 인증·코멘트 UI 전체 숨김
 
 ---
@@ -137,6 +154,26 @@ export const PAGE_REGISTRY = [
   { path: '/your-path', component: YourPage },
 ]
 ```
+
+---
+
+## 기능정의서·명세서 뷰
+
+`FeatureDocsView`(`src/components/docs/FeatureDocsView.jsx`)가 Google Sheets에서 데이터를 런타임에 직접 fetch해 렌더한다.
+
+### 주요 기능
+
+- **뷰 전환**: TopNav 탭으로 기능정의서·기능명세서 전환. 탭별 스크롤 위치 독립 저장·복원
+- **IA 섹션 구분**: 사용자 IA / 딜러 어드민 IA / 관리 어드민 IA 별 색상 헤더
+- **IA 이동 버튼**: 헤더 타이틀 옆 pill 버튼으로 해당 IA 섹션으로 즉시 이동
+- **검색**: 기능 ID·기능명 실시간 필터
+- **모바일 대응**: 테이블 가로 스크롤(`overflow-x-auto`), 컬럼 고정 너비(`table-fixed`)
+
+### Google Sheets 연동
+
+- Sheet ID: `src/components/docs/FeatureDocsView.jsx` 상단 `SHEET_ID` 상수 또는 `VITE_GOOGLE_SHEET_ID` 환경변수
+- 시트는 **링크 공유(뷰어) + 웹에 게시** 상태여야 함
+- 시트 수정 → 새로고침만으로 반영 (빌드·배포 불필요)
 
 ---
 
