@@ -8,7 +8,9 @@ allowed-tools: WebFetch, Bash, Read, Write, Edit, Glob, AskUserQuestion
 
 Builds real React screens straight from 기능정의서 + 기능명세서, and — when the user provides one — an externally-authored 화면명세서 too. **화면명세서 is typically received from someone else (a designer, a partner team), not produced by this project's own commands** — so this command takes it the same way `/generate-feature-definition` takes an IA source: as an optional link or local file, in whatever structure that person actually used, not a fixed internal schema. If no 화면명세서 is given, this command groups screens itself from 기능정의서 + 기능명세서, the way it always did. Either way, the goal is the same: a reviewer should be able to read 기능명세서 next to the rendered prototype and see every row accounted for.
 
-Follow `docs/README.md`'s existing conventions exactly (`src/pages/registry.js`, `src/config/navigation.js`, Tailwind, the mobile-vs-desktop frame split) — this command extends an existing app, it doesn't scaffold a new one.
+Follow `docs/README.md`'s existing conventions — this command extends an existing app, it doesn't scaffold a new one.
+
+**Every specific file/component name mentioned below (`registry.js`, `TopNav.jsx`, `authStore.js`, etc.) is a description of what this project's `docs/README.md` documents *right now* — not a hardcoded requirement of this command.** `docs/README.md` is the actual source of truth; this command's names are only as good as the last time someone kept them in sync with it. **At the start of every run, read `docs/README.md`'s Project Structure section (and skim the actual files if anything looks off) to confirm the real current names before relying on this command's examples.** If the project has been restructured since this command was last edited — a file renamed, moved, split, or a convention changed — follow what `docs/README.md` and the codebase actually show, not what's written here. Where this command names a file, read it as "whatever currently serves this role, which happens to be called X as of this writing."
 
 ## Non-negotiables — check these before writing a single line of code
 
@@ -16,8 +18,10 @@ These are the rules previous runs of this command have actually broken. Read the
 
 1. **`/` renders the real product home screen** — actual content a real user would see (featured/recent listings, search entry points, real nav), not a directory of every generated screen. This holds even if no IA Depth 1 group is literally named "홈" — compose a real home screen from the area's actual content (e.g. featured listings pulled from 차량 탐색, a quick search entry, category shortcuts) rather than defaulting to a directory because there's no explicit IA node for it. If a review directory of all screens is useful, it lives at a different path (e.g. `/_screens`), never at `/`.
 2. **Every 사용자 screen is wrapped in the shared bottom-nav shell (step 4). No exceptions, no "I'll add it later."** If you write a page file's JSX and it doesn't render inside — or get wrapped by — the shell component, stop before saving it. A screen with no persistent nav is the single most common failure of this command; check for it explicitly on every screen, not just the first one.
-3. **Fixed/sticky bottom bars never overlap scrollable content.** Any screen with a fixed-position bottom action bar (CTA buttons, nav) must give its scrollable content matching bottom padding/margin equal to that bar's height, so nothing renders underneath it. Check this on every screen that has one — this has broken in a previous run.
-4. **A screen is real functional UI, not a placeholder card.** (Full rule in step 5.)
+3. **Mock login state (step 4.5) is one shared, persisted store — never a per-screen local boolean.** Any screen with login-gated behavior must read/write that shared store, not its own local state, and the state must survive a page refresh. Don't confuse this with the review platform's own real login (`authStore.js`) — leave that alone entirely.
+4. **A reviewer can get from any IA area to any other IA area with a click, not by typing a URL (step 4.6).** Extend the existing TopNav's screen switcher — don't leave 딜러/관리자 screens reachable only by manually editing the address bar.
+5. **Fixed/sticky bottom bars are actually fixed, and never overlap scrollable content.** This covers two things that have both broken in previous runs: (a) the shell's own bottom nav must use real `position: fixed`/`sticky` CSS, not just markup placed near the bottom — verify it stays put after scrolling, not just visible before scrolling; (b) any screen with its own fixed bottom action bar (CTA buttons) must give scrollable content matching bottom padding equal to that bar's height, so nothing renders underneath it. Check both on every screen.
+6. **A screen is real functional UI, not a placeholder card.** (Full rule in step 5.)
 
 ## 0. Parse input and detect mode
 
@@ -30,7 +34,12 @@ Check `docs/feature-docs.xlsx` exists and has both `Feature Definitions` and `Fe
 
 Then set the mode:
 - **Mode A (화면명세서 제공됨)**: a link or file was given in `$ARGUMENTS`. Read it in step 2A — don't fall back to Mode B just because its structure looks unfamiliar; interpret it (see step 2A).
-- **Mode B (화면명세서 없음)**: no link/file was given. Proceed with in-memory grouping (step 2B). Don't ask the user to go find a 화면명세서 first — Mode B is a fully supported path, not a degraded fallback. (This command doesn't read a `Screen Specifications` tab from `docs/feature-docs.xlsx` on its own initiative either — if the user wants that tab used, they pass its file as the 화면명세서 source explicitly, same as any other source.)
+- **No source given in `$ARGUMENTS`** — before defaulting to Mode B, do a quick, cheap look in `docs/` (`Glob`, not a deep read) for a plausible unclaimed 화면명세서 candidate: a file that isn't `feature-docs.xlsx` itself and whose name suggests screens/wireframes/UI spec (`화면`, `screen`, `wireframe`, `ui-spec`, or similar — this is a filename heuristic, not a content guess).
+  - **Nothing plausible found** → proceed straight to Mode B, no need to ask or mention it; this is the common case and shouldn't add friction.
+  - **Exactly one plausible candidate** → ask with `AskUserQuestion`: "docs/에 `{파일명}`이 있는데 화면명세서로 쓸까요?" with options `네, 이걸로` / `아니, 없이 진행`. Proceed to Mode A or B accordingly.
+  - **More than one plausible candidate** → list them and ask which one to use (or none) — don't guess.
+  - Never open/parse a candidate file's content to help decide whether it's "really" a 화면명세서 — filename-level heuristics only, for one confirmation question. Content interpretation happens in step 2A, after the user has actually confirmed it's the right file.
+- **Mode B (화면명세서 없음)**: confirmed no 화면명세서 (explicitly none given, and either nothing found or the user declined the candidate). Proceed with in-memory grouping (step 2B) — a fully supported path, not a degraded fallback. (This command doesn't read a `Screen Specifications` tab from `docs/feature-docs.xlsx` on its own initiative — if the user wants that tab used, they pass its file as the 화면명세서 source explicitly, same as any other source.)
 
 State which mode is active once, early in the run, so the user knows which source is driving the screens.
 
@@ -78,10 +87,32 @@ It's fine, and expected, for a single run to leave most of a large scope for a f
 2. If none exists yet for this area, create exactly one:
    - **사용자 IA**: a mobile shell with a persistent bottom tab bar. Derive the tab items **once** from the IA's own top-level structure (e.g. 홈/탐색, 내차팔기, 찜/마이페이지, 고객센터) — don't let each screen invent its own set or ordering.
    - **딜러 어드민 / 관리 어드민**: a desktop shell with persistent top or side navigation reflecting that IA's Depth 1 categories, built once.
+   - **"Persistent" means actually fixed, not just placed at the bottom of the markup.** A bottom tab bar that scrolls away with the page content isn't persistent, it just happens to start near the bottom — that's a bug, not a lighter version of the requirement. Give it `position: fixed` (or `sticky` with a viewport-relative bottom offset), anchored to `bottom-0` within the mobile frame's own bounding container (not the browser viewport, since the frame itself is centered/width-constrained per the frame convention below), with a z-index high enough to stay above scrolling content. **Verify this concretely**: the nav should still be visible and unmoved after scrolling the page content, not just present in the initial unscrolled view.
+   - **The scrollable content inside the shell needs bottom padding equal to the nav's height**, so the last bit of real content isn't hidden underneath the fixed bar — same principle as non-negotiable #5 for per-screen action bars, applied here to the shell itself.
 3. Wire it with React Router's nested-route pattern — `<Route element={<UserAppShell />}>` wrapping the area's screen routes, with an `<Outlet />` in the shell for the active screen — so the shell mounts once and only the inner content swaps. Register this in `src/pages/registry.js` / `App.jsx` following whatever nesting convention `docs/README.md`'s existing router setup already uses.
 4. Every screen built in step 5 belongs inside its area's shell. **A generated screen must never render its own nav bar markup** — if a screen's design calls for something nav-like, it reuses the shell, it doesn't reimplement one.
 
 If a screen genuinely shouldn't have the persistent chrome (e.g. a full-screen checkout/payment step, a login modal-as-page), that's a deliberate, occasional exception — decide it explicitly per screen, don't let it become the default because building the shell felt like extra work.
+
+## 4.5. Build (or reuse) one shared, persistent mock login state per app — also before touching individual screens
+
+**Don't confuse this with the review platform's own login.** `docs/README.md` already describes a real auth system (`src/stores/authStore.js`, `LoginModal.jsx`) for reviewers to sign into *this review tool* and leave comments — leave that completely alone. What's being built here is a separate, **mocked login state for the product being prototyped** — e.g. "is this simulated CarVN buyer logged in," which is a real 기능ID in its own right (회원가입·로그인) and a condition that shows up across many other features' 상태 분기/예외 rows (매물 등록, 마이페이지, 찜하기, etc.).
+
+1. **One shared store, not per-screen state.** Create something like `src/stores/mockProductAuthStore.js` (Zustand, with the `persist` middleware — same pattern the codebase already uses for the real authStore) holding at minimum: whether the mock user is "logged in," and a small fake profile (name, etc.) once logged in. Every screen reads and writes this same store — never invent a local `isLoggedIn` boolean scoped to one component, or login on one screen won't be visible on another, which defeats the entire point.
+2. **Persist across refresh, clear on logout.** With `persist` middleware backing it by localStorage, refreshing the page keeps the mock login state exactly as a real app would — logged in stays logged in until an actual logout action clears the store. This is a hard requirement, not a nice-to-have: a prototype where login doesn't survive a refresh isn't demonstrating the real behavior.
+3. **Build one lightweight mock login screen/modal** (from the 회원가입·로그인 기능ID's row set) that sets this store when "submitted" — no real backend, no real validation beyond what 기능명세서 actually specifies, just enough to flip the store to logged-in with a plausible fake profile.
+4. **Every other screen's login-gated behavior reads this store**, per the state-fidelity rules in step 5 below — e.g. a 상태 분기 row like "비로그인 상태에서 매물 등록 시도 → 로그인 유도" checks this store's state and, if logged out, actually routes to the mock login screen; after logging in there, return the user to (or at least toward) what they were doing, the way a real app would, rather than dropping them somewhere unrelated.
+5. **Build once per app area that needs it**, reusing the same pattern established in step 4 — 딜러/관리자 areas likely need their own equivalent mock session store (since they're different actors, not the same "user"), don't share one store across unrelated actor types.
+
+## 4.6. Wire a cross-area screen switcher into the existing top-level TopNav — don't leave IA areas reachable only by typing a URL
+
+**This is a different problem from step 4's shell.** Step 4's shell handles navigation *within* one IA area (사용자's bottom tabs, 딜러's side nav). Nothing so far gets a reviewer *between* areas — from a 사용자 screen to a 딜러 screen — except manually typing a path into the browser bar. That's a real gap a reviewer will hit immediately, not an edge case.
+
+1. **Extend the existing `TopNav.jsx`** (`src/components/layout/TopNav.jsx` per `docs/README.md` — the one that already holds the 프로토타입/기능정의서/기능명세서 view-mode tabs). Don't build a second, separate nav component for this.
+2. Add a screen-switcher dropdown: a button showing the current screen's name, opening a list of **every registered screen grouped by IA 영역** (사용자 IA / 딜러 어드민 IA / 관리 어드민 IA / etc., matching `navigation.js`'s existing grouping). Clicking an item navigates immediately and closes the dropdown.
+3. **Drive this from `src/pages/registry.js` / `src/config/navigation.js` directly, not a hardcoded list.** Every future `/generate-prototype` run adds screens to those files anyway (step 4's file conventions) — if the dropdown reads from them dynamically, it stays correct automatically as more screens get built across runs, with no extra wiring needed each time.
+4. **Only visible in the 프로토타입 tab** — hidden when the top-level view mode is 기능정의서/기능명세서, matching how the rest of TopNav's prototype-only controls already behave.
+5. **Check before building**: if this switcher already exists in `TopNav.jsx` from a previous run, don't rebuild it — it should already be picking up newly-registered screens on its own (per point 3). Only add it if it's genuinely missing.
 
 ## 5. Build each screen — state fidelity is the whole point
 
@@ -92,7 +123,8 @@ If a screen genuinely shouldn't have the persistent chrome (e.g. a full-screen c
 2. Every 스펙ID row from step 2 is accounted for per the mapping rules below (rendered, or explicitly logged as skipped with a reason in the running list for step 9).
 3. The screen contains real, specific content (see step 6) — if you can't point to a sentence or data value that came from this domain rather than being generic, it's not done.
 4. The screen renders inside its area's shared shell from step 4, not with its own hand-rolled navigation.
-If a screen doesn't clear these four, it isn't finished — don't move on to conserve time or attention. If the full scope for this run is large enough that finishing every screen to this bar is genuinely at risk, say so explicitly and propose a smaller batch (see step 3.5) rather than finishing all of them shallowly.
+5. Any login-gated behavior on this screen reads/writes the shared mock auth store from step 4.5, not local state.
+If a screen doesn't clear these five, it isn't finished — don't move on to conserve time or attention. If the full scope for this run is large enough that finishing every screen to this bar is genuinely at risk, say so explicitly and propose a smaller batch (see step 3.5) rather than finishing all of them shallowly.
 
 For each screen, before writing code, list its full row set from step 2 (스펙ID | 구분 | 조건/트리거 | 처리내용 | 결과·화면반응). Every row must show up in the rendered component in one of these ways:
 
@@ -110,15 +142,22 @@ For each screen, before writing code, list its full row set from step 2 (스펙I
 
 **Frame convention (carries over from the earlier wireframe rule — same logic, now real code):**
 - Screens grouped from **사용자 IA** (`FN-USER-*`) → mobile-first, and **stay mobile-width even on desktop** (centered fixed-width mobile frame, e.g. `max-w-[420px] mx-auto`) — this is a deliberate product decision (consumer app is mobile-only in spirit), not a responsive breakpoint choice.
+- **The mobile frame must be visually distinct from the page around it — don't let both blend into the same flat color.** Give the frame a visible boundary (a border, a shadow, or a rounded-corner card edge) and/or make the outer page area (outside the frame) a genuinely different color from the frame's own background — e.g. a neutral gray page chrome behind a white/canvas-toned frame. A reviewer should be able to tell at a glance where "the phone screen" ends and "the review tool's page" begins; if the whole browser tab reads as one continuous flat surface, that's the bug.
 - Screens grouped from **딜러 어드민 / 관리 어드민** (`FN-DLR-*` / `FN-ADM-*`) → full-width desktop layouts (dense tables, filters, sidebar-style nav) — genuinely different information density than the consumer screens, not the same components restyled.
 
-## 6. Content must be domain-real, not placeholder
+## 6. Content must be domain-real, not placeholder — but UI copy stays Korean for now
 
-Never use "Lorem ipsum", "상품명 1/2/3", generic "Item A/B/C", or round demo numbers everywhere. Populate screens with content that actually belongs to this domain: real brand/model names from the IA (VinFast, Toyota, Hyundai, Kia, Mazda, Ford, Mercedes...), Hanoi districts, VND price formatting matching the IA's own convention (`triệu` units), and — critically — **reuse the exact quoted UI copy already written into 기능명세서's 결과/화면 반응 column** rather than inventing new wording. That copy was written specifically so it could be dropped straight into the UI; use it verbatim where the row is user-facing text.
+**Two different things are being populated here, and they follow different language rules:**
+
+- **Data values** (brand/model names, place names, price figures) — use real domain data: brand/model names from the IA (VinFast, Toyota, Hyundai, Kia, Mazda, Ford, Mercedes...), Hanoi districts, VND price formatting matching the IA's own convention (`triệu` units). These can stay in their natural real-world form (e.g. brand names, place names) since they're just data, not instructions the reviewer needs to parse.
+- **UI copy** (headings, labels, button text, placeholders, messages, section titles — anything the interface is "saying" to the user) — **write in Korean, not Vietnamese**, for this stage. The team reviewing this prototype reads Korean; a Vietnamese-language interface is a future localization pass for the real product, not something this command should produce by default. Never use "Lorem ipsum", "상품명 1/2/3", generic "Item A/B/C", or round demo numbers everywhere — but the wording itself should be real Korean copy.
+- **Critically: reuse the exact quoted UI copy already written into 기능명세서's 결과/화면 반응 column** rather than inventing new wording — that copy is already Korean and was written specifically so it could be dropped straight into the UI verbatim. This is usually the right source for user-facing text; don't translate it into Vietnamese, don't paraphrase it.
 
 ## 7. Visual design — the design-system skill wins if it's loaded, otherwise commit to a point of view
 
-If `design-system` skill guidance is present in context, it's authoritative — its exact tokens (colors, type, spacing, radius, named components) override the freeform guidance below wherever they overlap. Don't blend the two; don't improvise a palette when the skill already settled it.
+**Always re-read `DESIGN.md` fresh from disk at the start of this step, every run — don't rely on whatever version might already be in context from earlier in this session.** Mid-session skill/file caching behavior isn't fully predictable, and this file gets hand-edited between runs (that's the whole point of it being separate from `SKILL.md`). Treat "I already saw this earlier in the conversation" as insufficient — explicitly read it again here so a `DESIGN.md` edit always takes effect on the very next run, not "eventually" or "after a restart."
+
+If `design-system` skill guidance (freshly read per above) is present, it's authoritative — its exact tokens (colors, type, spacing, radius, named components) override the freeform guidance below wherever they overlap. Don't blend the two; don't improvise a palette when the skill already settled it.
 
 **Only when no design-system skill applies**, decide (briefly, in your own reasoning) before generating markup for the first screen, and hold to it for the rest of the run:
 - **Palette**: 4–6 named hex values grounded in *this* subject — a Vietnamese used-car marketplace (trust, automotive, locally credible) — not a generic SaaS blue or a startup-template palette.
@@ -146,6 +185,7 @@ Summarize:
 - Screens built this run (화면명, path, member 기능ID's)
 - Per screen, the row-to-UI mapping outcome: how many 스펙ID rows are visibly reflected vs. skipped (with reason) — flag any screen where rows were skipped
 - registry.js / navigation.js entries added
+- Whether the TopNav screen switcher (step 4.6) was newly added this run or already existed
 - Screens skipped because they already existed (in `이어서 추가` mode)
 - If the scope was larger than what got built this run (per step 3.5), say so explicitly and name what's left for a follow-up run
 - If the user cancelled, or a prerequisite tab was missing, say so plainly instead of reporting output
