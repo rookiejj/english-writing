@@ -73,13 +73,20 @@ PM이 발주사와 프로토타입을 공유하고, 화면 단위로 코멘트�
 │   │   └── db/
 │   │       └── schema.sql           # D1 DDL (users · comments)
 │   └── package.json
+├── scripts/
+│   └── gen_spec.py                  # 기능명세서 xlsx 시트 생성 스크립트 (Python/openpyxl)
 └── docs/
 │   ├── feature-docs.xlsx            # 기능정의서 + 기능명세서 (자동 생성)
 │   └── (IA 원본 파일 등 참고 자료)
 └── .claude/
-    └── commands/
-        ├── generate-feature-definition.md   # /generate-feature-definition 커맨드 정의
-        └── generate-feature-spec.md         # /generate-feature-spec 커맨드 정의
+    ├── commands/
+    │   ├── generate-feature-definition.md   # /generate-feature-definition 커맨드 정의
+    │   ├── generate-feature-spec.md         # /generate-feature-spec 커맨드 정의
+    │   └── generate-prototype.md            # /generate-prototype 커맨드 정의
+    └── skills/
+        └── design-system/
+            ├── SKILL.md             # 스킬 트리거 조건 정의
+            └── DESIGN.md            # 프로젝트 디자인 시스템 (색상·타이포·컴포넌트 스펙)
 ```
 
 ---
@@ -212,6 +219,21 @@ IA 문서(URL 또는 로컬 파일)를 읽어 `docs/feature-docs.xlsx`의 **Feat
 **스펙 ID 규칙:** `{기능ID}-{구분코드}-{2자리번호}` — 구분코드: `MAIN` / `VAL` / `EXC` / `BR`
 
 **출력 컬럼:** 기능 ID | 스펙 ID | 표시순서 | 기능명 | 구분 | 조건/트리거 | 처리 내용 | 결과/화면 반응 | 비고
+
+### `/generate-prototype`
+
+`docs/feature-docs.xlsx`의 기능정의서 + 기능명세서를 읽어 `src/pages/` 아래 실제 React 프로토타입 화면을 생성하고, 라우터·네비게이션에 자동 등록한다.
+
+```
+/generate-prototype [화면명세서 소스: 링크 또는 로컬 파일 경로(선택)] [범위 필터: 기능ID 패턴 또는 IA 영역명(선택)]
+```
+
+- **Mode A**: 외부 화면명세서(디자이너·파트너팀 제공) URL 또는 로컬 파일을 넘기면 그 화면 구조를 기준으로 화면 생성
+- **Mode B**: 소스 없이 호출하면 기능정의서+기능명세서를 기반으로 자체 그룹핑하여 화면 생성
+- 범위 필터 예시: `FN-DLR-*` (딜러 어드민만), `사용자` (사용자 IA만)
+- 화면별로 기능명세서의 모든 스펙 ID 행(MAIN/VAL/EXC/BR)을 실제 UI 상호작용으로 구현
+- 사용자 IA → 모바일 프레임(`max-w-[420px]`), 딜러/관리 어드민 → 풀와이드 데스크톱 레이아웃
+- 생성된 화면은 `registry.js` + `navigation.js`에 자동 등록되며 TopNav에서 바로 리뷰 가능
 
 > **Drive 공유:** 두 커맨드 모두 로컬 파일만 다루므로, Drive에 올리려면 생성된 xlsx 파일을 직접 드래그해서 업로드하면 서식이 그대로 유지된다.
 
