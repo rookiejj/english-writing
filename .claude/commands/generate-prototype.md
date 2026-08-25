@@ -10,6 +10,15 @@ Builds real React screens straight from 기능정의서 + 기능명세서, and �
 
 Follow `docs/README.md`'s existing conventions exactly (`src/pages/registry.js`, `src/config/navigation.js`, Tailwind, the mobile-vs-desktop frame split) — this command extends an existing app, it doesn't scaffold a new one.
 
+## Non-negotiables — check these before writing a single line of code
+
+These are the rules previous runs of this command have actually broken. Read them first, hold them through the whole run, and re-check them right before you finish — don't let step count or scope size push them out of attention.
+
+1. **`/` renders the real product home screen** — actual content a real user would see (featured/recent listings, search entry points, real nav), not a directory of every generated screen. This holds even if no IA Depth 1 group is literally named "홈" — compose a real home screen from the area's actual content (e.g. featured listings pulled from 차량 탐색, a quick search entry, category shortcuts) rather than defaulting to a directory because there's no explicit IA node for it. If a review directory of all screens is useful, it lives at a different path (e.g. `/_screens`), never at `/`.
+2. **Every 사용자 screen is wrapped in the shared bottom-nav shell (step 4). No exceptions, no "I'll add it later."** If you write a page file's JSX and it doesn't render inside — or get wrapped by — the shell component, stop before saving it. A screen with no persistent nav is the single most common failure of this command; check for it explicitly on every screen, not just the first one.
+3. **Fixed/sticky bottom bars never overlap scrollable content.** Any screen with a fixed-position bottom action bar (CTA buttons, nav) must give its scrollable content matching bottom padding/margin equal to that bar's height, so nothing renders underneath it. Check this on every screen that has one — this has broken in a previous run.
+4. **A screen is real functional UI, not a placeholder card.** (Full rule in step 5.)
+
 ## 0. Parse input and detect mode
 
 From `$ARGUMENTS`, classify each token:
@@ -76,7 +85,7 @@ If a screen genuinely shouldn't have the persistent chrome (e.g. a full-screen c
 
 ## 5. Build each screen — state fidelity is the whole point
 
-**A screen is not done if it's a title, a feature-ID range, and a link/card pointing at "the real thing later."** Each `src/pages/{PageName}/index.jsx` must itself render the actual functional UI for that screen — real form fields, a real (mocked) listing with real domain content, real buttons that do the thing they say — not a summary card, not a "coming soon," not a placeholder that just restates the screen's name and ID range. If you notice yourself writing a component whose entire content is a heading + description + badge, stop — that's the index-page failure mode, not a screen. A **landing/index page that links to all screens is fine to have as one page (`/`)** for navigation purposes; it is never a substitute for building the screens themselves, and every other route must contain the real thing.
+**A screen is not done if it's a title, a feature-ID range, and a link/card pointing at "the real thing later."** Each `src/pages/{PageName}/index.jsx` must itself render the actual functional UI for that screen — real form fields, a real (mocked) listing with real domain content, real buttons that do the thing they say — not a summary card, not a "coming soon," not a placeholder that just restates the screen's name and ID range. If you notice yourself writing a component whose entire content is a heading + description + badge, stop — that's the index-page failure mode, not a screen. A directory listing all screens for review purposes is fine to build — **at a path other than `/`** (see non-negotiable #1 above) — but it's never a substitute for building the screens themselves, and every other route must contain the real thing.
 
 **Definition of done, per screen, before moving to the next one:**
 1. Every 기능ID in the screen's row set has its 기능정의 (목적) visibly realized in the markup — not just referenced in a comment.
