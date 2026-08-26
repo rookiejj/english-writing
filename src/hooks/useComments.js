@@ -2,11 +2,9 @@ import { useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import useCommentStore from '@/stores/commentStore'
 import useAuthStore from '@/stores/authStore'
-import { CANONICAL_ORIGIN } from '@/config/app'
-
 export function useComments() {
   const location = useLocation()
-  const pageId = CANONICAL_ORIGIN + location.pathname
+  const pageId = location.origin + location.pathname
   const { user, token } = useAuthStore()
   const store = useCommentStore()
 
@@ -25,7 +23,7 @@ export function useComments() {
     return store.deleteComment(id, token)
   }
 
-  const allComments = store.allComments.filter(c => c.page_id?.startsWith(CANONICAL_ORIGIN))
+  const allComments = store.allComments.filter(c => c.page_id?.startsWith(location.origin))
 
   return {
     allComments,
