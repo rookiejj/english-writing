@@ -25,8 +25,10 @@ export function useComments() {
     return store.deleteComment(id, token)
   }
 
+  const allComments = store.allComments.filter(c => c.page_id?.startsWith(CANONICAL_ORIGIN))
+
   return {
-    allComments: store.allComments,
+    allComments,
     pageComments: store.pageComments,
     loading: store.loading,
     allLoading: store.allLoading,
