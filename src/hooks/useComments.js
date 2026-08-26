@@ -2,10 +2,11 @@ import { useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import useCommentStore from '@/stores/commentStore'
 import useAuthStore from '@/stores/authStore'
+import { CANONICAL_ORIGIN } from '@/config/app'
 
 export function useComments() {
   const location = useLocation()
-  const pageId = location.pathname
+  const pageId = CANONICAL_ORIGIN + location.pathname
   const { user, token } = useAuthStore()
   const store = useCommentStore()
 
