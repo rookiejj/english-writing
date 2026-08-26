@@ -28,6 +28,7 @@ export function useComments() {
     allComments: store.allComments,
     pageComments: store.pageComments,
     loading: store.loading,
+    allLoading: store.allLoading,
     currentPageId: pageId,
     user,
     addComment,

@@ -1,17 +1,20 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 
 export default function CommentInput({ onSubmit, placeholder = '코멘트를 입력하세요…', compact = false }) {
   const [text, setText] = useState('')
   const [loading, setLoading] = useState(false)
+  const submittingRef = useRef(false)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!text.trim()) return
+    if (!text.trim() || submittingRef.current) return
+    submittingRef.current = true
     setLoading(true)
     try {
       await onSubmit(text.trim())
       setText('')
     } finally {
+      submittingRef.current = false
       setLoading(false)
     }
   }

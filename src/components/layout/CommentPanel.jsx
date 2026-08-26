@@ -1,11 +1,28 @@
+import { useEffect, useRef } from 'react'
 import { useComments } from '@/hooks/useComments'
 import CommentList from '@/components/comment/CommentList'
 import CommentInput from '@/components/comment/CommentInput'
+import LoadingState from '@/components/ui/LoadingState'
 import useUIStore from '@/stores/uiStore'
 
 export default function CommentPanel() {
-  const { allComments, pageComments, loading, user, addComment, deleteComment } = useComments()
+  const { allComments, pageComments, loading, allLoading, user, addComment, deleteComment } = useComments()
   const { openLoginModal } = useUIStore()
+
+  const allScrollRef = useRef(null)
+  const pageScrollRef = useRef(null)
+
+  useEffect(() => {
+    if (allScrollRef.current) {
+      allScrollRef.current.scrollTop = allScrollRef.current.scrollHeight
+    }
+  }, [allComments.length])
+
+  useEffect(() => {
+    if (pageScrollRef.current) {
+      pageScrollRef.current.scrollTop = pageScrollRef.current.scrollHeight
+    }
+  }, [pageComments.length])
 
   const handleReply = (text, parentId) => addComment(text, parentId)
 
@@ -18,15 +35,21 @@ export default function CommentPanel() {
             전체 코멘트 <span className="font-normal text-gray-400">({allComments.length})</span>
           </p>
         </div>
-        <div className="flex-1 overflow-y-auto px-3 py-3">
-          <CommentList
-            comments={allComments}
-            currentUser={user}
-            onDelete={deleteComment}
-            onReply={handleReply}
-            showPageLabel
-            emptyText="아직 코멘트가 없습니다"
-          />
+        <div ref={allScrollRef} className="flex-1 overflow-y-auto px-3 py-3">
+          {allLoading ? (
+            <div className="flex justify-center py-6">
+              <LoadingState label="코멘트 불러오는 중" variant="Dots" />
+            </div>
+          ) : (
+            <CommentList
+              comments={allComments}
+              currentUser={user}
+              onDelete={deleteComment}
+              onReply={handleReply}
+              showPageLabel
+              emptyText="아직 코멘트가 없습니다"
+            />
+          )}
         </div>
       </div>
 
@@ -39,9 +62,11 @@ export default function CommentPanel() {
             이 화면 코멘트 <span className="font-normal text-gray-400">({pageComments.length})</span>
           </p>
         </div>
-        <div className="flex-1 overflow-y-auto px-3 py-3">
+        <div ref={pageScrollRef} className="flex-1 overflow-y-auto px-3 py-3">
           {loading ? (
-            <p className="text-xs text-gray-400 text-center py-6">불러오는 중…</p>
+            <div className="flex justify-center py-6">
+              <LoadingState label="코멘트 불러오는 중" variant="Dots" />
+            </div>
           ) : (
             <CommentList
               comments={pageComments}

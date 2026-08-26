@@ -6,6 +6,7 @@ const useCommentStore = create((set, get) => ({
   pageComments: [],
   currentPageId: null,
   loading: false,
+  allLoading: false,
 
   setCurrentPage: (pageId) => {
     set({ currentPageId: pageId })
@@ -13,8 +14,9 @@ const useCommentStore = create((set, get) => ({
   },
 
   fetchAllComments: async () => {
+    set({ allLoading: true })
     const { comments } = await commentService.getAllComments()
-    set({ allComments: comments })
+    set({ allComments: comments, allLoading: false })
   },
 
   fetchPageComments: async (pageId) => {
@@ -25,11 +27,22 @@ const useCommentStore = create((set, get) => ({
 
   addComment: async (content, parentId, token) => {
     const { currentPageId } = get()
-    await commentService.createComment(currentPageId, content, parentId, token)
-    await Promise.all([
-      get().fetchAllComments(),
-      get().fetchPageComments(currentPageId),
-    ])
+    const { comment } = await commentService.createComment(currentPageId, content, parentId, token)
+
+    if (!parentId) {
+      const newComment = { ...comment, replies: [] }
+      set(state => ({
+        pageComments: [...state.pageComments, newComment],
+        allComments: [...state.allComments, newComment],
+      }))
+    } else {
+      const appendReply = (list) =>
+        list.map(c => c.id === parentId ? { ...c, replies: [...(c.replies || []), comment] } : c)
+      set(state => ({
+        pageComments: appendReply(state.pageComments),
+        allComments: appendReply(state.allComments),
+      }))
+    }
   },
 
   deleteComment: async (commentId, token) => {
