@@ -16,7 +16,7 @@ const useCommentStore = create((set, get) => ({
   fetchAllComments: async () => {
     set({ allLoading: true })
     const { comments } = await commentService.getAllComments()
-    set({ allComments: comments, allLoading: false })
+    set({ allComments: comments.map(c => ({ ...c, replies: c.replies ?? [] })), allLoading: false })
   },
 
   fetchPageComments: async (pageId) => {
