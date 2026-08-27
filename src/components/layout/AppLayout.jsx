@@ -10,7 +10,7 @@ export default function AppLayout({ children }) {
   const isChangelog = viewMode === 'changelog'
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden">
+    <div className="flex flex-col h-dvh overflow-hidden">
       <TopNav />
       <div className="flex flex-1 overflow-hidden">
         <main className="flex-1 overflow-auto min-w-0">

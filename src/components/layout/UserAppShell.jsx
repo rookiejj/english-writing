@@ -99,12 +99,12 @@ export default function UserAppShell() {
           onScroll={handleScroll}
         >
           <Outlet />
-          {isRoot && <div className="h-16" />}
+          {isRoot && <div style={{ height: 'calc(4rem + env(safe-area-inset-bottom))' }} />}
         </div>
 
         {/* Bottom tab bar — root screens only */}
         {isRoot && (
-          <nav className="shrink-0 bg-white border-t border-gray-100 z-10">
+          <nav className="shrink-0 bg-white border-t border-gray-100 z-10" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
             <div className="flex">
               {TAB_ITEMS.map(({ path, label, icon: Icon }) => {
                 const active = location.pathname === path
