@@ -19,12 +19,18 @@ export default function CommentItem({ comment, currentUser, onDelete, onReply, s
       <div className="flex gap-2">
         <Avatar nickname={comment.nickname} />
         <div className="flex-1 min-w-0">
-          <div className="flex items-baseline gap-1.5 flex-wrap">
-            <span className="text-xs font-semibold text-gray-800">{comment.nickname}</span>
-            {showPageLabel && comment.page_id && (
-              <span className="text-xs text-gray-400 truncate max-w-[100px]">{comment.page_id}</span>
+          <div className="flex items-baseline gap-1.5 min-w-0">
+            <span className="text-xs font-semibold text-gray-800 shrink-0">{comment.nickname}</span>
+            {showPageLabel && comment.page_id ? (
+              <>
+                <span className="text-xs text-gray-400 flex-1 truncate min-w-0">
+                  {(() => { const p = comment.page_id.replace(/^https?:\/\/[^/]+/, ''); return p === '/' || p === '' ? '/home' : p })()}
+                </span>
+                <span className="text-xs text-gray-400 whitespace-nowrap shrink-0">{timeAgo(comment.created_at)}</span>
+              </>
+            ) : (
+              <span className="text-xs text-gray-400 ml-auto whitespace-nowrap shrink-0">{timeAgo(comment.created_at)}</span>
             )}
-            <span className="text-xs text-gray-400 ml-auto">{timeAgo(comment.created_at)}</span>
           </div>
           <p className="text-sm text-gray-700 whitespace-pre-wrap break-words">{comment.content}</p>
           <div className="flex gap-3 mt-0.5">

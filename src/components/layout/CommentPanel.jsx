@@ -6,7 +6,7 @@ import LoadingState from '@/components/ui/LoadingState'
 import useUIStore from '@/stores/uiStore'
 
 export default function CommentPanel() {
-  const { allComments, pageComments, loading, allLoading, user, addComment, deleteComment } = useComments()
+  const { allComments, pageComments, loading, allLoading, user, addComment, deleteComment, currentPageId } = useComments()
   const { openLoginModal } = useUIStore()
 
   const allScrollRef = useRef(null)
@@ -60,6 +60,11 @@ export default function CommentPanel() {
         <div className="px-3 py-2 border-b bg-white">
           <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
             이 화면 코멘트 <span className="font-normal text-gray-400">({pageComments.length})</span>
+            {currentPageId && (
+              <span className="ml-1.5 font-normal text-gray-400 normal-case tracking-normal">
+                {(() => { const p = currentPageId.replace(/^https?:\/\/[^/]+/, ''); return p === '/' || p === '' ? '/home' : p })()}
+              </span>
+            )}
           </p>
         </div>
         <div ref={pageScrollRef} className="flex-1 overflow-y-auto px-3 py-3">
