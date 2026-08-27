@@ -5,9 +5,12 @@ export async function request(path, options = {}) {
     headers: { 'Content-Type': 'application/json', ...options.headers },
     ...options,
   })
-  const data = await res.json()
-  if (!res.ok) throw new Error(data.message || 'Request failed')
-  return data
+  if (!res.ok) {
+    let msg = 'Request failed'
+    try { const d = await res.json(); msg = d.message || msg } catch {}
+    throw new Error(msg)
+  }
+  return res.json()
 }
 
 export function authRequest(path, token, options = {}) {
