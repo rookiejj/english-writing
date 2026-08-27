@@ -27,8 +27,12 @@ const useCommentStore = create((set, get) => ({
 
   fetchPageComments: async (pageId) => {
     set({ loading: true })
-    const { comments } = await commentService.getPageComments(pageId)
-    set({ pageComments: comments, loading: false })
+    try {
+      const { comments } = await commentService.getPageComments(pageId)
+      set({ pageComments: comments, loading: false })
+    } catch {
+      set({ loading: false })
+    }
   },
 
   addComment: async (content, parentId, token) => {
