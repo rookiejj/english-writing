@@ -14,7 +14,14 @@ export default function AppLayout({ children }) {
       <TopNav />
       <div className="flex flex-1 overflow-hidden">
         <main className="flex-1 overflow-auto min-w-0">
-          {isDocsView ? <FeatureDocsView mode={viewMode} /> : isChangelog ? <ChangelogView /> : children}
+          {(isDocsView || isChangelog) ? (
+            <>
+              <div className="hidden md:block h-full">
+                {isDocsView ? <FeatureDocsView mode={viewMode} /> : <ChangelogView />}
+              </div>
+              <div className="md:hidden h-full">{children}</div>
+            </>
+          ) : children}
         </main>
 
         {/* Comment panel — prototype view only */}

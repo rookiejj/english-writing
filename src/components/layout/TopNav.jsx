@@ -39,7 +39,7 @@ export default function TopNav() {
 
   return (
     <>
-      <nav className="flex items-center justify-between px-4 h-11 border-b border-gray-200 bg-white shrink-0 z-10">
+      <nav className="hidden md:flex items-center justify-between px-4 h-11 border-b border-gray-200 bg-white shrink-0 z-10">
         {/* Top-left: IA area switcher (2 areas → dropdown; shown only in prototype mode) */}
         {viewMode === 'prototype' ? (
           <div className="relative">
