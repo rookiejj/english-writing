@@ -10,7 +10,7 @@ PM이 발주사와 프로토타입을 공유하고, 화면 단위로 코멘트�
 |---|---|
 | Frontend | React 18 + Vite |
 | Styling | Tailwind CSS |
-| State | Zustand (persist 미들웨어) |
+| State | Zustand |
 | Router | React Router v6 |
 | Backend | Cloudflare Workers |
 | DB | Cloudflare D1 (SQLite) |
@@ -23,70 +23,49 @@ PM이 발주사와 프로토타입을 공유하고, 화면 단위로 코멘트�
 ```
 .
 ├── src/
-│   ├── App.jsx                      # 라우트 등록 (PAGE_REGISTRY 기반)
-│   ├── main.jsx
-│   ├── index.css                    # Tailwind 엔트리
+│   ├── App.jsx
 │   ├── config/
-│   │   └── navigation.js            # 화면 레이블·그룹 설정 (IA 기반)
+│   │   └── navigation.js            # 화면 레이블·그룹 설정
 │   ├── pages/
 │   │   ├── registry.js              # 화면 등록 테이블 (path + component)
-│   │   └── [PageName]/index.jsx     # 화면별 컴포넌트
+│   │   └── [PageName]/index.jsx
 │   ├── components/
 │   │   ├── layout/
 │   │   │   ├── AppLayout.jsx        # 뷰 모드에 따라 프로토타입 or 문서 뷰 렌더
-│   │   │   ├── TopNav.jsx           # 뷰 전환 탭 (프로토타입·정의서·명세서) + 인증 버튼
+│   │   │   ├── TopNav.jsx           # 뷰 전환 탭 + 인증 버튼
 │   │   │   └── CommentPanel.jsx     # 전체 코멘트(상) + 현재 화면 코멘트(하)
-│   │   ├── docs/
-│   │   │   └── FeatureDocsView.jsx  # 기능정의서·명세서 뷰 (Google Sheets 실시간 fetch)
 │   │   ├── comment/
-│   │   │   ├── CommentList.jsx      # 코멘트 목록 렌더
-│   │   │   ├── CommentItem.jsx      # 코멘트 단위 (답글 포함, 인스타그램 스타일)
-│   │   │   └── CommentInput.jsx     # 코멘트 작성 폼
+│   │   │   ├── CommentList.jsx
+│   │   │   ├── CommentItem.jsx
+│   │   │   └── CommentInput.jsx
 │   │   ├── auth/
-│   │   │   ├── LoginModal.jsx       # 로그인 / 회원가입 탭 모달
-│   │   │   └── ProfileModal.jsx     # 닉네임 · 비밀번호 변경 모달
+│   │   │   ├── LoginModal.jsx
+│   │   │   └── ProfileModal.jsx
 │   │   └── ui/
-│   │       ├── Modal.jsx            # 공용 모달 래퍼 (ESC · 외부 클릭 닫기)
-│   │       └── Avatar.jsx           # 닉네임 이니셜 컬러 아바타
+│   │       ├── Modal.jsx
+│   │       └── Avatar.jsx
 │   ├── hooks/
-│   │   └── useComments.js           # 코멘트 페치·액션 통합 (페이지 ID = pathname)
+│   │   └── useComments.js
 │   ├── services/
-│   │   ├── api.js                   # fetch 래퍼 (request / authRequest)
-│   │   ├── auth.service.js          # 인증 API 호출
-│   │   └── comment.service.js       # 코멘트 API 호출
+│   │   ├── api.js
+│   │   ├── auth.service.js
+│   │   └── comment.service.js
 │   └── stores/
-│       ├── authStore.js             # 유저·토큰 (localStorage 영속)
-│       ├── commentStore.js          # 전체·현재 화면 코멘트 상태
-│       └── uiStore.js               # 패널 열림·모달·뷰 모드 상태 (viewMode)
+│       ├── authStore.js
+│       ├── commentStore.js
+│       └── uiStore.js
 ├── worker/
-│   ├── wrangler.toml                # Workers 설정 (D1 바인딩)
-│   ├── src/
-│   │   ├── index.js                 # Workers 엔트리 (라우팅 + CORS)
-│   │   ├── routes/
-│   │   │   ├── auth.js              # POST /api/auth/signup·login  PATCH nickname·password
-│   │   │   └── comments.js          # GET·POST /api/comments  DELETE /api/comments/:id
-│   │   ├── middleware/
-│   │   │   └── cors.js              # CORS 헤더 · json() 헬퍼 · requireAuth()
-│   │   ├── utils/
-│   │   │   ├── jwt.js               # HS256 JWT (Web Crypto API, 외부 의존성 0)
-│   │   │   └── password.js          # PBKDF2 해싱 (Web Crypto API, 외부 의존성 0)
-│   │   └── db/
-│   │       └── schema.sql           # D1 DDL (users · comments)
-│   └── package.json
-├── scripts/
-│   └── gen_spec.py                  # 기능명세서 xlsx 시트 생성 스크립트 (Python/openpyxl)
+│   ├── wrangler.toml
+│   └── src/
+│       ├── index.js
+│       ├── routes/
+│       │   ├── auth.js              # POST /api/auth/signup·login  PATCH nickname·password
+│       │   └── comments.js          # GET·POST /api/comments  DELETE /api/comments/:id
+│       ├── middleware/
+│       │   └── cors.js
+│       └── db/
+│           └── schema.sql           # D1 DDL (users · comments)
 └── docs/
-│   ├── feature-docs.xlsx            # 기능정의서 + 기능명세서 (자동 생성)
-│   └── (IA 원본 파일 등 참고 자료)
-└── .claude/
-    ├── commands/
-    │   ├── generate-feature-definition.md   # /generate-feature-definition 커맨드 정의
-    │   ├── generate-feature-spec.md         # /generate-feature-spec 커맨드 정의
-    │   └── generate-prototype.md            # /generate-prototype 커맨드 정의
-    └── skills/
-        └── design-system/
-            ├── SKILL.md             # 스킬 트리거 조건 정의
-            └── DESIGN.md            # 프로젝트 디자인 시스템 (색상·타이포·컴포넌트 스펙)
 ```
 
 ---
@@ -101,7 +80,6 @@ PM이 발주사와 프로토타입을 공유하고, 화면 단위로 코멘트�
 
 - 뷰 전환 탭은 모든 브레이크포인트에서 표시
 - 인증 버튼·코멘트 토글은 PC(`md` 이상)에서만 표시
-- 코멘트 토글은 프로토타입 뷰일 때만 표시
 
 ### PC (md 이상) — 프로토타입 뷰
 
@@ -115,11 +93,7 @@ PM이 발주사와 프로토타입을 공유하고, 화면 단위로 코멘트�
 └──────────────────────────────────────┴────────────────┘
 ```
 
-- 코멘트 패널은 우측으로 슬라이드 토글 (transition-all)
-
-### 문서 뷰 (기능정의서·명세서)
-
-코멘트 패널 없이 전체 너비로 `FeatureDocsView` 렌더. PC·모바일 공통.
+- 코멘트 패널은 우측으로 슬라이드 토글
 
 ### Mobile — 프로토타입 뷰
 
@@ -130,126 +104,35 @@ PM이 발주사와 프로토타입을 공유하고, 화면 단위로 코멘트�
 
 ## Comment System
 
-- **단위**: 페이지 단위 (페이지 ID = `location.pathname`)
-- **스레드**: 최대 1단계 답글 (인스타그램 스타일)
-- **권한**: 로그인 사용자 누구나 작성 / 본인 코멘트만 삭제 / 수정 없음
-- **전체 탭**: 모든 페이지의 최신 100건 (페이지 레이블 표시)
-- **현재 탭**: 현재 pathname의 최상위 코멘트 + 답글
+- **단위**: `location.origin + pathname` — 도메인이 다르면 데이터가 완전히 분리됨
+- **스레드**: 최대 1단계 답글
+- **권한**: 로그인 사용자 누구나 작성 / 본인 코멘트만 삭제
+- **전체 탭**: 현재 도메인 기준 최신 100건 (답글 포함)
+- **현재 탭**: 현재 화면의 코멘트 + 답글
+- **세션 캐시**: 전체 코멘트는 페이지 로드 시 1회만 fetch. 이후 네비게이션에서는 Zustand 상태 유지
 
 ---
 
 ## Auth
 
-- 이메일 + 숫자 4자리 PIN
+- 이메일 + 닉네임 + 숫자 4자리 PIN
 - JWT (HS256, 30일 만료) → localStorage 영속
-- 닉네임 별도 설정 (가입 시 필수)
-- 비밀번호·닉네임 변경은 PC TopNav 프로필 모달에서만
-
----
-
-## Adding a New Prototype Page
-
-1. `src/pages/YourPage/index.jsx` 생성
-2. `src/pages/registry.js`에 경로 + 컴포넌트 등록
-3. `src/config/navigation.js`에 레이블 추가 (코멘트 패널 표시용)
-
-```js
-// registry.js
-import YourPage from './YourPage'
-export const PAGE_REGISTRY = [
-  { path: '/', component: HomePage },
-  { path: '/your-path', component: YourPage },
-]
-```
-
----
-
-## 기능정의서·명세서 뷰
-
-`FeatureDocsView`(`src/components/docs/FeatureDocsView.jsx`)가 Google Sheets에서 데이터를 런타임에 직접 fetch해 렌더한다.
-
-### 주요 기능
-
-- **뷰 전환**: TopNav 탭으로 기능정의서·기능명세서 전환. 탭별 스크롤 위치 독립 저장·복원
-- **IA 섹션 구분**: 사용자 IA / 딜러 어드민 IA / 관리 어드민 IA 별 색상 헤더
-- **IA 이동 버튼**: 헤더 타이틀 옆 pill 버튼으로 해당 IA 섹션으로 즉시 이동
-- **검색**: 기능 ID·기능명 실시간 필터
-- **모바일 대응**: 테이블 가로 스크롤(`overflow-x-auto`), 컬럼 고정 너비(`table-fixed`)
-
-### Google Sheets 연동
-
-- Sheet ID: `src/components/docs/FeatureDocsView.jsx` 상단 `SHEET_ID` 상수 또는 `VITE_GOOGLE_SHEET_ID` 환경변수
-- 시트는 **링크 공유(뷰어) + 웹에 게시** 상태여야 함
-- 시트 수정 → 새로고침만으로 반영 (빌드·배포 불필요)
-
----
-
-## Docs & Claude Commands
-
-`docs/feature-docs.xlsx`는 기능정의서(Feature Definitions)와 기능명세서(Feature Specifications) 두 탭으로 구성된다. 두 탭 모두 아래 Claude Code 커맨드로 자동 생성·갱신하며, 수동 작성이나 복붙 없이 IA 문서에서 바로 뽑아낸다.
-
-### `/generate-feature-definition`
-
-IA 문서(URL 또는 로컬 파일)를 읽어 `docs/feature-docs.xlsx`의 **Feature Definitions** 탭을 생성하거나 이어붙인다.
-
-```
-/generate-feature-definition <IA 링크 또는 docs/ 경로> [영역명(선택)]
-```
-
-- Google Docs URL 또는 `docs/` 하위 로컬 파일 모두 지원
-- 하나의 문서에 여러 IA 영역(사용자/딜러/관리 등)이 포함된 경우 한 번에 처리
-- 기존 파일이 있으면 덮어쓰지 않고 이어 추가할지 묻고 확인 후 진행
-- 기능 ID 규칙: `FN-USER-###`, `FN-DLR-###`, `FN-ADM-###` (3자리 zero-pad)
-
-**출력 컬럼:** IA 영역 | Depth 1 | Depth 2 | 기능 ID | 기능명 | 대상 | Phase | 기능 정의 | 수익 모델
-
-### `/generate-feature-spec`
-
-`docs/feature-docs.xlsx`의 Feature Definitions 탭을 읽어 **Feature Specifications** 탭을 생성하거나 이어붙인다. 기능정의서가 먼저 있어야 실행 가능.
-
-```
-/generate-feature-spec [FN-DLR-* 등 기능ID 패턴(선택)] [xlsx 경로 오버라이드(선택)]
-```
-
-- 인수 없음 → 아직 스펙이 없는 기능ID만 증분 처리 (기본값)
-- 기능 ID 패턴 → 해당 영역만 처리 (e.g. `FN-DLR-*`)
-- `전체` / `all` → 전체 재처리 (기존 탭 덮어쓸지 확인 후 진행)
-- `기능명` 컬럼은 Feature Definitions 탭과 수식으로 연동 (`INDEX`/`MATCH`)
-
-**스펙 ID 규칙:** `{기능ID}-{구분코드}-{2자리번호}` — 구분코드: `MAIN` / `VAL` / `EXC` / `BR`
-
-**출력 컬럼:** 기능 ID | 스펙 ID | 표시순서 | 기능명 | 구분 | 조건/트리거 | 처리 내용 | 결과/화면 반응 | 비고
-
-### `/generate-prototype`
-
-`docs/feature-docs.xlsx`의 기능정의서 + 기능명세서를 읽어 `src/pages/` 아래 실제 React 프로토타입 화면을 생성하고, 라우터·네비게이션에 자동 등록한다.
-
-```
-/generate-prototype [화면명세서 소스: 링크 또는 로컬 파일 경로(선택)] [범위 필터: 기능ID 패턴 또는 IA 영역명(선택)]
-```
-
-- **Mode A**: 외부 화면명세서(디자이너·파트너팀 제공) URL 또는 로컬 파일을 넘기면 그 화면 구조를 기준으로 화면 생성
-- **Mode B**: 소스 없이 호출하면 기능정의서+기능명세서를 기반으로 자체 그룹핑하여 화면 생성
-- 범위 필터 예시: `FN-DLR-*` (딜러 어드민만), `사용자` (사용자 IA만)
-- 화면별로 기능명세서의 모든 스펙 ID 행(MAIN/VAL/EXC/BR)을 실제 UI 상호작용으로 구현
-- 사용자 IA → 모바일 프레임(`max-w-[420px]`), 딜러/관리 어드민 → 풀와이드 데스크톱 레이아웃
-- 생성된 화면은 `registry.js` + `navigation.js`에 자동 등록되며 TopNav에서 바로 리뷰 가능
-
-> **Drive 공유:** 두 커맨드 모두 로컬 파일만 다루므로, Drive에 올리려면 생성된 xlsx 파일을 직접 드래그해서 업로드하면 서식이 그대로 유지된다.
+- 닉네임·비밀번호 변경은 TopNav 프로필 모달에서
 
 ---
 
 ## Dev Setup
 
 ```bash
-# 프론트엔드
+# 의존성 설치
 npm install
-cp .env.example .env.local
-npm run dev          # http://localhost:5173
+cd worker && npm install && cd ..
 
-# Workers (별도 터미널)
-cd worker && npm install
-npm run dev          # http://localhost:8787
+# 로컬 실행
+npm run dev          # Vite → http://localhost:5173
+
+# Worker (별도 터미널)
+cd worker && npm run dev   # http://localhost:8787
 ```
 
 ---
@@ -257,11 +140,12 @@ npm run dev          # http://localhost:8787
 ## Cloudflare D1 Setup
 
 ```bash
-# 1. D1 데이터베이스 생성
 cd worker
-npx wrangler d1 create prototype-review-db
 
-# 2. 출력된 database_id를 wrangler.toml에 붙여넣기
+# 1. D1 데이터베이스 생성
+npx wrangler d1 create <db-name>
+
+# 2. 출력된 database_id를 wrangler.toml에 입력
 
 # 3. 로컬 스키마 적용
 npm run db:init
@@ -269,7 +153,7 @@ npm run db:init
 # 4. 프로덕션 스키마 적용
 npm run db:init:remote
 
-# 5. JWT 시크릿 설정 (프로덕션)
+# 5. JWT 시크릿 설정
 npx wrangler secret put JWT_SECRET
 ```
 
@@ -277,44 +161,22 @@ npx wrangler secret put JWT_SECRET
 
 ## Deploy
 
-### Frontend — Cloudflare Pages (자동)
+### Frontend — Cloudflare Pages
 
-Cloudflare Pages 대시보드에서 GitHub 레포를 직접 연결하면 `main` 브랜치 push 시 자동 빌드·배포된다. GitHub Actions 개입 없음.
+GitHub 레포를 Cloudflare Pages에 연결하면 `main` 브랜치 push 시 자동 빌드·배포.
 
 | 항목 | 값 |
 |---|---|
 | Build command | `npm run build` |
 | Build output | `dist/` |
-| Root directory | (루트) |
 
-### Worker — GitHub Actions (자동)
+### Worker — GitHub Actions
 
-`.github/workflows/deploy.yml`이 아래 경로 변경 시 자동으로 Worker를 배포한다.
-
-```
-worker/src/**
-worker/package*.json
-worker/wrangler.toml
-```
-
-수동 트리거는 GitHub Actions 탭 → `Deploy Worker` → `Run workflow`.
+`worker/` 하위 파일 변경 시 자동 배포 (`.github/workflows/deploy.yml`).
 
 **필요한 GitHub Secrets:**
 
 | Secret | 설명 |
 |---|---|
-| `CLOUDFLARE_API_TOKEN` | Cloudflare API 토큰 (Workers 배포 권한) |
+| `CLOUDFLARE_API_TOKEN` | Workers 배포 권한 |
 | `CLOUDFLARE_ACCOUNT_ID` | Cloudflare 계정 ID |
-
-### 문서 데이터 갱신 — Google Sheets (실시간)
-
-기능정의서·기능명세서는 Google Sheets에서 런타임에 직접 가져온다. 빌드나 배포 없이 **시트를 수정하면 새로고침 즉시 반영**된다.
-
-Sheet ID는 `src/components/docs/FeatureDocsView.jsx` 상단 `SHEET_ID` 상수로 관리하며, `VITE_GOOGLE_SHEET_ID` 환경변수로 오버라이드 가능하다. 시트는 반드시 **링크 공유(뷰어) + 웹에 게시** 상태여야 한다.
-
-### 수동 배포 (필요 시)
-
-```bash
-# Worker만 로컬에서 직접 배포
-cd worker && npm run deploy
-```
