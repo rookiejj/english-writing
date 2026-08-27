@@ -9,6 +9,7 @@ const VIEW_TABS = [
   { key: 'prototype',  label: '프로토타입' },
   { key: 'definition', label: '기능정의서' },
   { key: 'spec',       label: '기능명세서' },
+  { key: 'changelog',  label: '변경 이력' },
 ]
 
 // IA areas — derived from the current project's two IA areas

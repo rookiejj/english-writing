@@ -1,0 +1,83 @@
+name: Track Prototype Changes
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/pages/**'
+
+jobs:
+  track:
+    name: 변경된 화면 로그 기록
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: D1에 변경 이력 기록
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          python3 << 'EOF'
+          import subprocess, json, urllib.request, os, sys, re, uuid
+
+          # wrangler.toml에서 database_id 자동 추출
+          with open('worker/wrangler.toml') as f:
+              toml = f.read()
+          db_id = re.search(r'database_id\s*=\s*"([^"]+)"', toml).group(1)
+
+          account_id = os.environ['CLOUDFLARE_ACCOUNT_ID']
+          api_token  = os.environ['CLOUDFLARE_API_TOKEN']
+          d1_url = f"https://api.cloudflare.com/client/v4/accounts/{account_id}/d1/database/{db_id}/query"
+
+          def d1(sql, params=None):
+              data = json.dumps({"sql": sql, "params": params or []}).encode()
+              req  = urllib.request.Request(d1_url, data=data, headers={
+                  "Content-Type": "application/json",
+                  "Authorization": f"Bearer {api_token}",
+              })
+              return json.loads(urllib.request.urlopen(req).read())
+
+          # 테이블이 없으면 자동 생성
+          d1("""CREATE TABLE IF NOT EXISTS changelog (
+            id          TEXT PRIMARY KEY,
+            commit_sha  TEXT NOT NULL,
+            commit_msg  TEXT NOT NULL,
+            author      TEXT NOT NULL,
+            screen_path TEXT NOT NULL,
+            action      TEXT NOT NULL,
+            pushed_at   INTEGER NOT NULL DEFAULT (unixepoch())
+          )""")
+          d1("CREATE INDEX IF NOT EXISTS idx_changelog_pushed_at ON changelog(pushed_at DESC)")
+
+          diff = subprocess.check_output(
+              ['git', 'diff', '--name-status', 'HEAD~1', 'HEAD', '--', 'src/pages/']
+          ).decode().strip()
+          if not diff:
+              print("변경된 화면 없음")
+              sys.exit(0)
+
+          commit_sha = subprocess.check_output(['git', 'log', '-1', '--format=%h']).decode().strip()
+          commit_msg = subprocess.check_output(['git', 'log', '-1', '--format=%s']).decode().strip()
+          author     = subprocess.check_output(['git', 'log', '-1', '--format=%an']).decode().strip()
+
+          seen = set()
+          for line in diff.split('\n'):
+              if not line: continue
+              parts    = line.split('\t')
+              status   = parts[0]
+              filepath = parts[-1]
+              segs     = filepath.split('/')
+              if len(segs) < 3: continue
+              page_dir = '/'.join(segs[:3])
+              if page_dir in seen: continue
+              seen.add(page_dir)
+              action = {'A': 'added', 'M': 'updated', 'D': 'removed'}.get(status[0], 'updated')
+              d1(
+                  "INSERT INTO changelog (id, commit_sha, commit_msg, author, screen_path, action) VALUES (?, ?, ?, ?, ?, ?)",
+                  [str(uuid.uuid4()), commit_sha, commit_msg, author, page_dir, action]
+              )
+              print(f"✓ {page_dir} ({action})")
+          EOF

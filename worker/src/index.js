@@ -1,6 +1,7 @@
 import { CORS_HEADERS } from './middleware/cors.js'
 import { handleAuth } from './routes/auth.js'
 import { handleComments } from './routes/comments.js'
+import { handleChangelog } from './routes/changelog.js'
 
 export default {
   async fetch(req, env) {
@@ -14,6 +15,7 @@ export default {
     try {
       if (url.pathname.startsWith('/api/auth')) return handleAuth(req, env)
       if (url.pathname.startsWith('/api/comments')) return handleComments(req, env)
+      if (url.pathname.startsWith('/api/changelog')) return handleChangelog(req, env)
       return new Response('Not found', { status: 404 })
     } catch (err) {
       return new Response(JSON.stringify({ message: 'Internal error' }), {
