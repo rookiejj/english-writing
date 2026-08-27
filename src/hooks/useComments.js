@@ -9,8 +9,11 @@ export function useComments() {
   const store = useCommentStore()
 
   useEffect(() => {
-    store.setCurrentPage(pageId)
     store.fetchAllComments()
+  }, [])
+
+  useEffect(() => {
+    store.setCurrentPage(pageId)
   }, [pageId])
 
   const addComment = (content, parentId = null) => {
