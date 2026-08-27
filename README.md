@@ -63,7 +63,7 @@ PM이 발주사와 프로토타입을 공유하고, 화면 단위로 코멘트�
 │   └── src/
 │       ├── index.js
 │       ├── routes/
-│       │   ├── auth.js              # POST /api/auth/signup·login  PATCH nickname·password
+│       │   ├── auth.js              # POST /api/auth/signup·login  GET /api/auth/users  PATCH nickname·password
 │       │   └── comments.js          # GET·POST /api/comments  DELETE /api/comments/:id
 │       ├── middleware/
 │       │   └── cors.js
@@ -120,9 +120,9 @@ PM이 발주사와 프로토타입을 공유하고, 화면 단위로 코멘트�
 - **단위**: `location.origin + pathname` — 도메인이 다르면 데이터가 완전히 분리됨
 - **스레드**: 최대 1단계 답글
 - **권한**: 로그인 사용자 누구나 작성 / 본인 코멘트만 삭제
-- **전체 탭**: 현재 도메인 기준 최신 100건 (답글 포함)
-- **현재 탭**: 현재 화면의 코멘트 + 답글
-- **세션 캐시**: 전체 코멘트는 페이지 로드 시 1회만 fetch. 이후 네비게이션에서는 Zustand 상태 유지
+- **전체 탭**: 현재 도메인 기준 최신 100건 (답글 포함). 각 코멘트에 소속 화면 경로 표시 (도메인 제외, `/` → `/home`)
+- **현재 탭**: 현재 화면의 코멘트 + 답글. 헤더에 현재 경로 표시
+- **세션 캐시**: 전체 코멘트는 페이지 로드 시 1회만 fetch. 이후 네비게이션에서는 Zustand 상태 유지 (새 코멘트는 로컬 append)
 
 ---
 
@@ -130,7 +130,8 @@ PM이 발주사와 프로토타입을 공유하고, 화면 단위로 코멘트�
 
 - 이메일 + 닉네임 + 숫자 4자리 PIN
 - JWT (HS256, 30일 만료) → localStorage 영속
-- 닉네임·비밀번호 변경은 TopNav 프로필 모달에서
+- TopNav 닉네임 버튼 클릭 → 프로필 모달 (닉네임·비밀번호 변경)
+- **가입자 목록**: 전체 코멘트 패널 헤더의 "가입자" 버튼 → 드롭다운으로 닉네임·이메일 목록 조회 (로그인 필요, `GET /api/auth/users`)
 
 ---
 
