@@ -1,7 +1,6 @@
 // shell: 'user' | 'admin' | 'none'
 // 새 화면 추가: 이 배열에만 추가 + navigation.js에 라벨 등록
 
-import LandingPage    from './LandingPage'
 import Home           from './Home'
 import Login          from './Login'
 import LevelTest      from './LevelTest'
@@ -21,9 +20,6 @@ import AdminUsers     from './AdminUsers'
 import AdminStats     from './AdminStats'
 
 export const PAGE_REGISTRY = [
-  // ── standalone (no shell)
-  { path: '/',                shell: 'none',  component: LandingPage },
-
   // ── 사용자 IA
   { path: '/home',            shell: 'user',  component: Home },
   { path: '/login',           shell: 'user',  component: Login },
