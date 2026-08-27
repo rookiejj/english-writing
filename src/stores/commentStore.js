@@ -7,19 +7,21 @@ const useCommentStore = create((set, get) => ({
   currentPageId: null,
   loading: false,
   allLoading: false,
+  allFetched: false,
 
   setCurrentPage: (pageId) => {
     set({ currentPageId: pageId })
     get().fetchPageComments(pageId)
   },
 
-  fetchAllComments: async () => {
-    set({ allLoading: true })
+  fetchAllComments: async ({ force = false } = {}) => {
+    if (!force && get().allFetched) return
+    set({ allLoading: true, allFetched: true })
     try {
       const { comments } = await commentService.getAllComments()
       set({ allComments: comments.map(c => ({ ...c, replies: c.replies ?? [] })), allLoading: false })
     } catch {
-      set({ allLoading: false })
+      set({ allLoading: false, allFetched: false })
     }
   },
 
@@ -53,7 +55,7 @@ const useCommentStore = create((set, get) => ({
     await commentService.deleteComment(commentId, token)
     const { currentPageId } = get()
     await Promise.all([
-      get().fetchAllComments(),
+      get().fetchAllComments({ force: true }),
       get().fetchPageComments(currentPageId),
     ])
   },
