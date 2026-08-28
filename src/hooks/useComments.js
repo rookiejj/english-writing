@@ -10,7 +10,7 @@ export function useComments() {
   const location = useLocation()
   const rawOrigin = window.location.origin
   const filterOrigin = normalizeOrigin(rawOrigin)
-  const pageId = rawOrigin + location.pathname
+  const pageId = filterOrigin + location.pathname
   const { user, token } = useAuthStore()
   const store = useCommentStore()
 
