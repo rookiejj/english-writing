@@ -1,10 +1,10 @@
-name = "roysoft-review-worker"
+name = "english-writing-worker"
 main = "src/index.js"
 compatibility_date = "2024-09-23"
 
 [[d1_databases]]
 binding = "DB"
-database_name = "roysoft-review-db"
-database_id = "a6b76a19-fb14-4070-ad17-5728dbfaca27"
+database_name = "english-writing-db"
+database_id = "a31d48b9-a17a-45a8-9c09-55bcd0512637"
 
 [vars]
