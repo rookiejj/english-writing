@@ -13,3 +13,6 @@ export const createComment = (pageId, content, parentId, token) =>
 
 export const deleteComment = (id, token) =>
   authRequest(`/comments/${id}`, token, { method: 'DELETE' })
+
+export const resolveComment = (id, token) =>
+  authRequest(`/comments/${id}/resolve`, token, { method: 'PATCH' })

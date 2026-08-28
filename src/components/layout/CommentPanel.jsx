@@ -6,7 +6,7 @@ import LoadingState from '@/components/ui/LoadingState'
 import useUIStore from '@/stores/uiStore'
 
 export default function CommentPanel() {
-  const { allComments, pageComments, loading, allLoading, user, addComment, deleteComment, currentPageId } = useComments()
+  const { allComments, pageComments, loading, allLoading, user, addComment, deleteComment, resolveComment, currentPageId } = useComments()
   const { openLoginModal } = useUIStore()
 
   const allScrollRef = useRef(null)
@@ -19,10 +19,10 @@ export default function CommentPanel() {
   }, [allComments.length])
 
   useEffect(() => {
-    if (pageScrollRef.current) {
+    if (!loading && pageScrollRef.current) {
       pageScrollRef.current.scrollTop = pageScrollRef.current.scrollHeight
     }
-  }, [pageComments.length])
+  }, [loading, pageComments.length])
 
   const handleReply = (text, parentId) => addComment(text, parentId)
 
@@ -46,6 +46,7 @@ export default function CommentPanel() {
               currentUser={user}
               onDelete={deleteComment}
               onReply={handleReply}
+              onResolve={resolveComment}
               showPageLabel
               emptyText="아직 코멘트가 없습니다"
             />
@@ -78,6 +79,7 @@ export default function CommentPanel() {
               currentUser={user}
               onDelete={deleteComment}
               onReply={handleReply}
+              onResolve={resolveComment}
               emptyText="이 화면에 대한 코멘트가 없습니다"
             />
           )}

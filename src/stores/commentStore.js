@@ -55,6 +55,21 @@ const useCommentStore = create((set, get) => ({
     }
   },
 
+  resolveComment: async (commentId, token) => {
+    const toggleNested = (list) => list.map(c => {
+      if (c.id === commentId) return { ...c, resolved: c.resolved ? 0 : 1 }
+      if (c.replies?.some(r => r.id === commentId)) {
+        return { ...c, replies: c.replies.map(r => r.id === commentId ? { ...r, resolved: r.resolved ? 0 : 1 } : r) }
+      }
+      return c
+    })
+    set(state => ({
+      pageComments: toggleNested(state.pageComments),
+      allComments: toggleNested(state.allComments),
+    }))
+    try { await commentService.resolveComment(commentId, token) } catch {}
+  },
+
   deleteComment: async (commentId, token) => {
     await commentService.deleteComment(commentId, token)
     const { currentPageId } = get()

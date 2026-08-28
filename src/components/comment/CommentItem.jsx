@@ -10,14 +10,28 @@ function timeAgo(ts) {
   return `${Math.floor(diff / 86400)}일 전`
 }
 
-export default function CommentItem({ comment, currentUser, onDelete, onReply, showPageLabel }) {
+const ADMIN_EMAIL = 'rookiejj@gmail.com'
+
+export default function CommentItem({ comment, currentUser, onDelete, onReply, onResolve, showPageLabel }) {
   const [showReply, setShowReply] = useState(false)
   const isOwn = currentUser?.id === comment.user_id
+  const isAdmin = currentUser?.email === ADMIN_EMAIL
+  const isResolved = !!comment.resolved
 
   return (
     <div className="flex flex-col gap-1">
       <div className="flex gap-2">
-        <Avatar nickname={comment.nickname} />
+        <div className="flex items-center gap-1.5 self-start">
+          {isAdmin && (
+            <input
+              type="checkbox"
+              checked={isResolved}
+              onChange={() => onResolve?.(comment.id)}
+              className="shrink-0 cursor-pointer accent-blue-500"
+            />
+          )}
+          <Avatar nickname={comment.nickname} />
+        </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-baseline gap-1.5 min-w-0">
             <span className="text-xs font-semibold text-gray-800 shrink-0">{comment.nickname}</span>
@@ -32,7 +46,7 @@ export default function CommentItem({ comment, currentUser, onDelete, onReply, s
               <span className="text-xs text-gray-400 ml-auto whitespace-nowrap shrink-0">{timeAgo(comment.created_at)}</span>
             )}
           </div>
-          <p className="text-sm text-gray-700 whitespace-pre-wrap break-words">{comment.content}</p>
+          <p className="text-sm whitespace-pre-wrap break-words" style={{ color: isResolved ? '#9CA3AF' : '#374151', textDecoration: isResolved ? 'line-through' : 'none' }}>{comment.content}</p>
           <div className="flex gap-3 mt-0.5">
             {currentUser && !showPageLabel && (
               <button
@@ -57,15 +71,27 @@ export default function CommentItem({ comment, currentUser, onDelete, onReply, s
       {/* Replies */}
       {comment.replies?.length > 0 && (
         <div className="ml-9 flex flex-col gap-2 border-l-2 border-gray-100 pl-3">
-          {comment.replies.map(reply => (
+          {comment.replies.map(reply => {
+            const replyResolved = !!reply.resolved
+            return (
             <div key={reply.id} className="flex gap-2">
-              <Avatar nickname={reply.nickname} size="sm" />
+              <div className="flex items-center gap-1.5 self-start">
+                {isAdmin && (
+                  <input
+                    type="checkbox"
+                    checked={replyResolved}
+                    onChange={() => onResolve?.(reply.id)}
+                    className="shrink-0 cursor-pointer accent-blue-500"
+                  />
+                )}
+                <Avatar nickname={reply.nickname} size="sm" />
+              </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-baseline gap-1.5">
                   <span className="text-xs font-semibold text-gray-800">{reply.nickname}</span>
                   <span className="text-xs text-gray-400 ml-auto">{timeAgo(reply.created_at)}</span>
                 </div>
-                <p className="text-sm text-gray-700 whitespace-pre-wrap break-words">{reply.content}</p>
+                <p className="text-sm whitespace-pre-wrap break-words" style={{ color: replyResolved ? '#9CA3AF' : '#374151', textDecoration: replyResolved ? 'line-through' : 'none' }}>{reply.content}</p>
                 {currentUser?.id === reply.user_id && (
                   <button onClick={() => onDelete(reply.id)} className="text-xs text-red-400 hover:text-red-600 mt-0.5">
                     삭제
@@ -73,7 +99,7 @@ export default function CommentItem({ comment, currentUser, onDelete, onReply, s
                 )}
               </div>
             </div>
-          ))}
+          )})}
         </div>
       )}
 

@@ -8,8 +8,9 @@ function normalizeOrigin(origin) {
 
 export function useComments() {
   const location = useLocation()
-  const origin = normalizeOrigin(window.location.origin)
-  const pageId = origin + location.pathname
+  const rawOrigin = window.location.origin
+  const filterOrigin = normalizeOrigin(rawOrigin)
+  const pageId = rawOrigin + location.pathname
   const { user, token } = useAuthStore()
   const store = useCommentStore()
 
@@ -31,7 +32,12 @@ export function useComments() {
     return store.deleteComment(id, token)
   }
 
-  const allComments = store.allComments.filter(c => c.page_id?.startsWith(origin))
+  const resolveComment = (id) => {
+    if (!token) return
+    return store.resolveComment(id, token)
+  }
+
+  const allComments = store.allComments.filter(c => c.page_id?.startsWith(filterOrigin))
 
   return {
     allComments,
@@ -42,5 +48,6 @@ export function useComments() {
     user,
     addComment,
     deleteComment,
+    resolveComment,
   }
 }
